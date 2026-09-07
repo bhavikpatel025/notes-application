@@ -1,0 +1,185 @@
+.note-card {
+  border: 1px solid var(--gk-border);
+  border-radius: var(--border-radius-sm);
+  padding: 16px;
+  position: relative;
+  transition: box-shadow 0.2s ease;
+  break-inside: avoid;
+  margin-bottom: 16px;
+  cursor: pointer;
+  /* Fix for CSS multi-column fragmentation splitting absolute popups */
+  transform: translateZ(0);
+  z-index: 1;
+
+  &:hover, &:focus-within {
+    box-shadow: var(--gk-shadow-hover);
+    z-index: 10;
+    
+    .note-actions, .pin-btn {
+      opacity: 1;
+    }
+  }
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.note-title {
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font-family);
+  color: var(--gk-text-primary);
+  word-break: break-word;
+  letter-spacing: 0.1px;
+}
+
+.note-content {
+  font-size: 14px;
+  font-weight: 400;
+  font-family: var(--font-family);
+  color: var(--gk-text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 16px;
+  letter-spacing: 0.2px;
+  
+  .content {
+    margin: 0 0 12px 0;
+    /* Google Keep style truncation for long notes */
+    display: -webkit-box;
+    -webkit-line-clamp: 10; /* Max 10 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .material-symbols-outlined {
+    font-size: 20px;
+    padding: 6px;
+  }
+  
+  &[data-tooltip] {
+    --tooltip-top: calc(100% - 6px);
+  }
+}
+
+.pin-btn {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  
+  &.pinned {
+    opacity: 1;
+    .material-symbols-outlined {
+      color: var(--gk-text-primary);
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+    }
+  }
+}
+
+.note-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  
+  .delete-btn {
+    margin-left: auto;
+  }
+}
+
+/* Mobile UI/UX Fix: Touch devices don't have hover, so icons must be always visible */
+@media (max-width: 768px) {
+  .note-actions, .pin-btn {
+    opacity: 1 !important;
+  }
+}
+
+.labels-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+
+  .label-chip {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--gk-text-primary);
+    max-width: 100%;
+    
+    .label-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .remove-label-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 4px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      
+      .material-symbols-outlined {
+        font-size: 14px;
+      }
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+    
+    &:hover .remove-label-btn {
+      display: inline-flex;
+    }
+  }
+}
+
+/* Removed card-footer styles since we use note-actions */
+
+.more-menu {
+  bottom: 100%;
+  top: auto;
+  left: 0;
+  right: auto;
+  min-width: 150px;
+  margin-bottom: 4px;
+  
+  .menu-item {
+    position: relative;
+  }
+}
+
+.label-popup-container {
+  position: absolute;
+  bottom: 100%;
+  top: auto;
+  left: 0;
+  right: auto;
+  margin-bottom: 4px;
+  z-index: 1000;
+}

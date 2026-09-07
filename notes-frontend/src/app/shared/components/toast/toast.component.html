@@ -1,0 +1,16 @@
+@if (toastService.currentToast()) {
+  <div class="toast-container">
+    <span class="message">{{ toastService.currentToast()?.message }}</span>
+    
+    <div class="toast-actions">
+      @if (toastService.currentToast()?.actionLabel) {
+        <button class="action-btn" (click)="toastService.executeAction()">
+          {{ toastService.currentToast()?.actionLabel }}
+        </button>
+      }
+      <button class="close-btn" (click)="toastService.hide()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+  </div>
+}

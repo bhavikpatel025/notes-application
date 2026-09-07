@@ -1,0 +1,30 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h1>Keep Notes</h1>
+    <p>Create a new account</p>
+
+    @if (error) {
+      <div class="error-banner">{{ error }}</div>
+    }
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="input-group">
+        <input type="text" formControlName="fullName" placeholder="Full Name" autocomplete="name" />
+      </div>
+
+      <div class="input-group">
+        <input type="email" formControlName="email" placeholder="Email" autocomplete="email" />
+      </div>
+      
+      <div class="input-group">
+        <input type="password" formControlName="password" placeholder="Password" autocomplete="new-password" />
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="registerForm.invalid || isLoading">
+        {{ isLoading ? 'Creating account...' : 'Create Account' }}
+      </button>
+    </form>
+
+    <a routerLink="/login" class="auth-link">Already have an account? Sign in</a>
+  </div>
+</div>

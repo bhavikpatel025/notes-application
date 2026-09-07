@@ -1,0 +1,118 @@
+<div class="note-card" [style.background-color]="note.color !== '#FFFFFF' ? note.color : 'var(--gk-bg-primary)'">
+  
+  <!-- Image Grid -->
+  @if (note.imageUrls && note.imageUrls.length > 0) {
+    <div class="image-preview-grid" [class.single]="note.imageUrls.length === 1">
+      @for (img of note.imageUrls; track img) {
+        <div class="image-wrapper">
+          <img [src]="img" alt="Note Image">
+        </div>
+      }
+    </div>
+  }
+
+  <div class="note-header">
+    @if (note.title) {
+      <h3 class="note-title" [innerHTML]="note.title | highlight: searchQuery"></h3>
+    }
+    
+    @if (!isTrashView) {
+      <button class="icon-btn pin-btn" [class.pinned]="note.isPinned" (click)="onPin($event)" [attr.data-tooltip]="note.isPinned ? 'Unpin note' : 'Pin note'">
+        <span class="material-symbols-outlined">push_pin</span>
+      </button>
+    }
+  </div>
+
+  <div class="note-content">
+    @if (note.content) {
+      <p class="content" [innerHTML]="note.content | highlight:searchQuery"></p>
+    }
+
+    @if (note.labels && note.labels.length > 0) {
+      <div class="labels-container">
+        @for (label of note.labels; track label.id) {
+          <div class="label-chip" (click)="onLabelClick(label.name, $event)">
+            <span class="label-name">{{ label.name }}</span>
+            <button class="remove-label-btn" (click)="removeLabel(label.id, $event)" data-tooltip="Remove label">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="note-actions">
+    @if (!isTrashView) {
+        <div class="palette-container" style="position: relative; display: inline-block;">
+          <button type="button" class="icon-btn" data-tooltip="Background options" (click)="toggleColorPalette($event)">
+            <span class="material-symbols-outlined">palette</span>
+          </button>
+          
+          @if (showColorPalette) {
+            <div class="color-palette-menu" (click)="$event.stopPropagation()">
+              @for (color of colors; track color.name) {
+                <div 
+                  class="color-swatch"
+                  [class.default-color]="color.isDefault"
+                  [class.active]="note.color === color.value"
+                  [style.background-color]="color.isDefault ? 'transparent' : color.value"
+                  [attr.data-tooltip]="color.name"
+                  (click)="changeColor(color.value, $event)">
+                  
+                  @if (color.isDefault) {
+                    <span class="material-symbols-outlined">format_color_reset</span>
+                  } @else if (note.color === color.value) {
+                    <span class="material-symbols-outlined">check</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
+          <span class="material-symbols-outlined">image</span>
+        </button>
+        <input type="file" #fileInput hidden accept="image/png, image/jpeg, image/gif" multiple (change)="onFileSelected($event)">
+        
+        <button type="button" class="icon-btn" [attr.data-tooltip]="note.isArchived ? 'Unarchive' : 'Archive'" (click)="onArchive($event)">
+          <span class="material-symbols-outlined">
+            {{ note.isArchived ? 'unarchive' : 'archive' }}
+          </span>
+        </button>
+        
+        <div class="more-container" style="position: relative; display: inline-block;">
+          <button type="button" class="icon-btn" data-tooltip="More" (click)="toggleMoreMenu($event)">
+            <span class="material-symbols-outlined">more_vert</span>
+          </button>
+          
+          @if (showMoreMenu) {
+            <div class="dropdown-menu more-menu" (click)="$event.stopPropagation()">
+              <div class="menu-item" (click)="onDelete($event)">Delete note</div>
+              <div class="menu-item" (click)="openLabelPopup($event)">
+                {{ (note.labels && note.labels.length > 0) ? 'Change labels' : 'Add label' }}
+              </div>
+            </div>
+          }
+
+          @if (showLabelPopup) {
+            <app-label-selection-popup
+              [selectedLabels]="note.labels || []"
+              (labelsChanged)="onLabelsChanged($event)"
+              (closePopup)="showLabelPopup = false"
+              class="label-popup-container">
+            </app-label-selection-popup>
+          }
+        </div>
+    } @else {
+      <button class="icon-btn" (click)="onDelete($event)" data-tooltip="Delete forever">
+        <span class="material-symbols-outlined">delete_forever</span>
+      </button>
+
+      <button class="icon-btn" (click)="onRestore($event)" data-tooltip="Restore">
+        <span class="material-symbols-outlined">restore_from_trash</span>
+      </button>
+    }
+  </div>
+</div>

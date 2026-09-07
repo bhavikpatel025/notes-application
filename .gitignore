@@ -1,0 +1,75 @@
+# =========================
+# Backend (.NET)
+# =========================
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# Environment specific configuration
+notes-backend/Notes.Api/appsettings.Development.json
+notes-backend/Notes.Api/appsettings.Production.json
+notes-backend/.env
+
+# Secrets
+secrets.json
+
+# Local database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# =========================
+# Frontend (Angular/Node)
+# =========================
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# Angular cache
+.angular/
+
+# test coverage
+coverage/
+
+# env files
+.env
+.env.*
+
+# logs
+npm-debug.log
+yarn-error.log
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -1,0 +1,58 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Edit labels</h3>
+    </div>
+
+    <div class="modal-body">
+      <!-- Create Label Row -->
+      <div class="label-row create-row">
+        <button class="icon-btn" (click)="createLabel()">
+          <span class="material-symbols-outlined" *ngIf="!newLabelName">add</span>
+          <span class="material-symbols-outlined" *ngIf="newLabelName" style="color: var(--gk-accent)">check</span>
+        </button>
+        <input type="text" placeholder="Create new label" [(ngModel)]="newLabelName" (keyup.enter)="createLabel()" (focus)="editingLabelId.set(null)">
+        <button class="icon-btn" *ngIf="newLabelName" (click)="newLabelName = ''">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="label-list">
+        @for (label of labelService.labels(); track label.id) {
+          <div class="label-row" [class.editing]="editingLabelId() === label.id">
+            
+            <!-- Default View (Hover for delete/edit) -->
+            @if (editingLabelId() !== label.id) {
+              <button class="icon-btn delete-btn" (click)="deleteLabel(label.id)" data-tooltip="Delete label">
+                <span class="material-symbols-outlined default-icon">label</span>
+                <span class="material-symbols-outlined hover-icon">delete</span>
+              </button>
+              
+              <span class="label-name" (click)="startEdit(label)">{{ label.name }}</span>
+              
+              <button class="icon-btn" (click)="startEdit(label)" data-tooltip="Rename label">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+            } 
+            <!-- Editing View -->
+            @else {
+              <button class="icon-btn delete-btn" (click)="deleteLabel(label.id)" data-tooltip="Delete label">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+              
+              <input type="text" [(ngModel)]="editLabelName" (keyup.enter)="saveEdit(label.id)" autofocus>
+              
+              <button class="icon-btn" (click)="saveEdit(label.id)">
+                <span class="material-symbols-outlined" style="color: var(--gk-accent)">check</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-text" (click)="closeModal()">Done</button>
+    </div>
+  </div>
+</div>

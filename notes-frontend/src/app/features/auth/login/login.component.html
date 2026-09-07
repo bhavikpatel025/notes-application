@@ -1,0 +1,26 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h1>Keep Notes</h1>
+    <p>Sign in to continue</p>
+
+    @if (error) {
+      <div class="error-banner">{{ error }}</div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="input-group">
+        <input type="email" formControlName="email" placeholder="Email" autocomplete="email" />
+      </div>
+      
+      <div class="input-group">
+        <input type="password" formControlName="password" placeholder="Password" autocomplete="current-password" />
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="loginForm.invalid || isLoading">
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+
+    <a routerLink="/register" class="auth-link">Create account</a>
+  </div>
+</div>

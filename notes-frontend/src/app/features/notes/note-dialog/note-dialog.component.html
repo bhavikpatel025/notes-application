@@ -1,0 +1,106 @@
+<div class="modal-overlay" (click)="onClose()">
+  <form [formGroup]="editForm" class="modal-content edit-form" (click)="onModalClick($event)" [style.background-color]="editForm.get('color')?.value !== '#FFFFFF' ? editForm.get('color')?.value : 'var(--gk-bg-primary)'">
+    <div class="modal-body">
+        <!-- Hidden File Input -->
+        <input type="file" #fileInput hidden accept="image/png, image/jpeg, image/gif" multiple (change)="onFileSelected($event)">
+
+        <!-- Image Previews -->
+        @if (editForm.get('imageUrls')?.value?.length > 0) {
+          <div class="image-preview-grid" [class.single]="editForm.get('imageUrls')?.value.length === 1">
+            @for (img of editForm.get('imageUrls')?.value; track img; let i = $index) {
+              <div class="image-wrapper">
+                <img [src]="img" alt="Preview">
+                <button type="button" class="delete-img-btn" (click)="removeImage(i, $event)">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <input type="text" formControlName="title" placeholder="Title" class="title-input">
+        
+        <textarea formControlName="content" placeholder="Note" class="content-input" cdkTextareaAutosize #autosize="cdkTextareaAutosize" [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="20"></textarea>
+      </div>
+
+      @if (note.labels && note.labels.length > 0) {
+        <div class="labels-container">
+          @for (label of note.labels; track label.id) {
+            <div class="label-chip">
+              <span class="label-name">{{ label.name }}</span>
+              <button class="remove-label-btn" (click)="removeLabel(label.id, $event)" data-tooltip="Remove label">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="dialog-footer">
+        <div class="toolbar-icons">
+          <div class="palette-container" style="position: relative; display: inline-block;">
+            <button type="button" class="icon-btn" data-tooltip="Background options" (click)="toggleDialogColorPalette($event)">
+              <span class="material-symbols-outlined">palette</span>
+            </button>
+            
+            @if (showDialogColorPalette) {
+              <div class="color-palette-menu" (click)="$event.stopPropagation()">
+                @for (color of colors; track color.name) {
+                  <div 
+                    class="color-swatch"
+                    [class.default-color]="color.isDefault"
+                    [class.active]="editForm.get('color')?.value === color.value"
+                    [style.background-color]="color.isDefault ? 'transparent' : color.value"
+                    [attr.data-tooltip]="color.name"
+                    (click)="changeColor(color.value, $event)">
+                    
+                    @if (color.isDefault) {
+                      <span class="material-symbols-outlined">format_color_reset</span>
+                    } @else if (editForm.get('color')?.value === color.value) {
+                      <span class="material-symbols-outlined">check</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          
+          <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
+            <span class="material-symbols-outlined">image</span>
+          </button>
+          
+          <button type="button" class="icon-btn" [attr.data-tooltip]="note.isArchived ? 'Unarchive' : 'Archive'" (click)="onArchive()">
+            <span class="material-symbols-outlined">
+              {{ note.isArchived ? 'unarchive' : 'archive' }}
+            </span>
+          </button>
+          
+          <div class="more-container" style="position: relative; display: inline-block;">
+            <button type="button" class="icon-btn" data-tooltip="More" (click)="toggleMoreMenu($event)">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+            
+            @if (showMoreMenu) {
+              <div class="dropdown-menu more-menu" (click)="$event.stopPropagation()">
+                <div class="menu-item" (click)="onDelete()">Delete note</div>
+                <div class="menu-item" (click)="openLabelPopup($event)">
+                  {{ (note.labels && note.labels.length > 0) ? 'Change labels' : 'Add label' }}
+                </div>
+              </div>
+            }
+
+            @if (showLabelPopup) {
+              <app-label-selection-popup
+                [selectedLabels]="note.labels || []"
+                (labelsChanged)="onLabelsChanged($event)"
+                (closePopup)="showLabelPopup = false"
+                class="label-popup-container">
+              </app-label-selection-popup>
+            }
+          </div>
+        </div>
+        
+        <button type="button" class="btn btn-text close-btn" (click)="onClose()">Close</button>
+      </div>
+    </form>
+</div>

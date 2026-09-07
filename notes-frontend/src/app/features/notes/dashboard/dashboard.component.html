@@ -1,0 +1,456 @@
+<div class="dashboard-layout">
+  
+  <header class="top-nav">
+    <div style="display: flex; align-items: center;" class="header-left">
+      @if (isMobileSearchActive) {
+        <button class="icon-btn" (click)="closeMobileSearch()" style="margin-right: 8px;">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+      } @else {
+        <button class="icon-btn" (click)="toggleSidebar()" data-tooltip="Main menu" style="margin-right: 8px;">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div class="brand">
+          <span class="material-symbols-outlined" style="color: var(--gk-accent); font-variation-settings: 'FILL' 1;">lightbulb</span>
+          <h2><span class="brand-keep">Keep </span>Notes</h2>
+        </div>
+      }
+    </div>
+
+    <div class="search-bar-container" [class.mobile-active]="isMobileSearchActive">
+      <button class="icon-btn search-icon-btn">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+      <input type="text" placeholder="Search" (input)="onSearch($event)" (focus)="onSearchFocus()" [value]="noteService.searchQuery()">
+      @if (noteService.searchQuery()) {
+        <button class="icon-btn clear-btn" (click)="clearSearch()" data-tooltip="Clear search">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      }
+    </div>
+
+    @if (!isMobileSearchActive) {
+      <div class="nav-actions">
+        <!-- Settings Menu -->
+        <div class="menu-container">
+          <button class="icon-btn" (click)="toggleSettingsMenu()" data-tooltip="Settings">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+          
+          @if (showSettingsMenu) {
+            <div class="dropdown-menu">
+              <div class="menu-item" (click)="toggleTheme()">
+                {{ isDarkMode() ? 'Disable dark theme' : 'Enable dark theme' }}
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Profile Menu -->
+        <div class="menu-container">
+          <button class="avatar-btn tooltip-right" (click)="toggleProfileMenu()" [attr.data-tooltip]="authService.currentUser()?.fullName + '\n' + authService.currentUser()?.email">
+            <div class="avatar-circle">
+              {{ authService.currentUser()?.fullName?.charAt(0) | uppercase }}
+            </div>
+          </button>
+          
+          @if (showProfileMenu) {
+            <div class="dropdown-menu profile-menu">
+              <div class="menu-header">
+                <strong>{{ authService.currentUser()?.fullName }}</strong>
+                <span>{{ authService.currentUser()?.email }}</span>
+              </div>
+              <div class="menu-divider"></div>
+              <div class="menu-item text-danger" (click)="logout()">
+                <span class="material-symbols-outlined">logout</span>
+                Sign out
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </header>
+
+  <div class="main-container">
+    @if (isMobileSidebarOpen) {
+      <div class="sidebar-backdrop" (click)="toggleSidebar()"></div>
+    }
+    
+    <aside class="sidebar" [class.collapsed]="isSidebarCollapsed" [class.mobile-open]="isMobileSidebarOpen">
+      <div class="nav-item" [class.active]="currentView === 'notes'" (click)="setView('notes')" [attr.data-tooltip]="isSidebarCollapsed ? 'Notes' : null">
+        <span class="material-symbols-outlined">lightbulb</span>
+        <span class="label">Notes</span>
+      </div>
+      
+      @for (label of labelService.labels(); track label.id) {
+        <div class="nav-item" [class.active]="currentView === label.name" (click)="setView(label.name)" [attr.data-tooltip]="isSidebarCollapsed ? label.name : null">
+          <span class="material-symbols-outlined">label</span>
+          <span class="label" style="text-transform: none;">{{ label.name }}</span>
+        </div>
+      }
+      
+      <div class="nav-item" (click)="showEditLabelsModal = true" [attr.data-tooltip]="isSidebarCollapsed ? 'Edit labels' : null">
+        <span class="material-symbols-outlined">edit</span>
+        <span class="label">Edit labels</span>
+      </div>
+
+      <div class="nav-item" [class.active]="currentView === 'archive'" (click)="setView('archive')" [attr.data-tooltip]="isSidebarCollapsed ? 'Archive' : null">
+        <span class="material-symbols-outlined">archive</span>
+        <span class="label">Archive</span>
+      </div>
+      <div class="nav-item" [class.active]="currentView === 'trash'" (click)="setView('trash')" [attr.data-tooltip]="isSidebarCollapsed ? 'Trash' : null">
+        <span class="material-symbols-outlined">delete</span>
+        <span class="label">Trash</span>
+      </div>
+    </aside>
+
+    <main class="content-area" [class.expanded]="isSidebarCollapsed">
+    
+    @if (noteService.searchQuery()) {
+      <!-- SEARCH VIEW -->
+      <div class="search-results-view">
+        
+        <!-- Pinned Matches -->
+        @if (noteService.searchPinnedNotes().length > 0) {
+          <div class="notes-section">
+            <h4 class="section-label">PINNED</h4>
+            <div class="masonry-grid">
+              @for (note of noteService.searchPinnedNotes(); track note.id) {
+                <app-note-card 
+                  [note]="note" 
+                  [searchQuery]="noteService.searchQuery()"
+                  (click)="openNoteDialog(note)"
+                  (delete)="onDeleteNote($event)"
+                  (togglePin)="onUpdateNote($event)"
+                  (toggleArchive)="onUpdateNote($event)"
+                  (labelClick)="setView($event)">
+                </app-note-card>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Others Matches -->
+        @if (noteService.searchUnpinnedNotes().length > 0) {
+          <div class="notes-section">
+            @if (noteService.searchPinnedNotes().length > 0) {
+              <h4 class="section-label">OTHERS</h4>
+            }
+            <div class="masonry-grid">
+              @for (note of noteService.searchUnpinnedNotes(); track note.id) {
+                <app-note-card 
+                  [note]="note" 
+                  [searchQuery]="noteService.searchQuery()"
+                  (click)="openNoteDialog(note)"
+                  (delete)="onDeleteNote($event)"
+                  (togglePin)="onUpdateNote($event)"
+                  (toggleArchive)="onUpdateNote($event)"
+                  (labelClick)="setView($event)">
+                </app-note-card>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Archive Matches -->
+        @if (noteService.searchArchivedNotes().length > 0) {
+          <div class="notes-section">
+            <h4 class="section-label">ARCHIVE</h4>
+            <div class="masonry-grid">
+              @for (note of noteService.searchArchivedNotes(); track note.id) {
+                <app-note-card 
+                  [note]="note" 
+                  [searchQuery]="noteService.searchQuery()"
+                  (click)="openNoteDialog(note)"
+                  (delete)="onDeleteNote($event)"
+                  (togglePin)="onUpdateNote($event)"
+                  (toggleArchive)="onUpdateNote($event)"
+                  (labelClick)="setView($event)">
+                </app-note-card>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Empty Search -->
+        @if (noteService.searchPinnedNotes().length === 0 && noteService.searchUnpinnedNotes().length === 0 && noteService.searchArchivedNotes().length === 0) {
+           <div class="empty-state">
+            <span class="material-symbols-outlined empty-icon">search</span>
+            <p class="empty-text">No matching results.</p>
+          </div>
+        }
+      </div>
+    } @else {
+    
+    <!-- Note Creator -->
+    @if (currentView === 'notes' || isLabelView) {
+      <div class="note-creator" [class.expanded]="isExpanded" [style.background-color]="noteForm.get('color')?.value !== '#FFFFFF' ? noteForm.get('color')?.value : 'var(--gk-bg-primary)'">
+      <form [formGroup]="noteForm">
+        <!-- Hidden File Input -->
+        <input type="file" #fileInput hidden accept="image/png, image/jpeg, image/gif" multiple (change)="onFileSelected($event)">
+
+        <!-- Image Previews -->
+        @if (noteForm.get('imageUrls')?.value?.length > 0) {
+          <div class="image-preview-grid" [class.single]="noteForm.get('imageUrls')?.value.length === 1">
+            @for (img of noteForm.get('imageUrls')?.value; track img; let i = $index) {
+              <div class="image-wrapper">
+                <img [src]="img" alt="Preview">
+                <button type="button" class="delete-img-btn" (click)="removeImage(i, $event)">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (isExpanded) {
+          <input type="text" formControlName="title" placeholder="Title" class="title-input">
+        }
+        
+        <div class="input-wrapper">
+          <textarea 
+            formControlName="content" 
+            placeholder="Take a note..." 
+            (focus)="expandForm()"
+            rows="1"
+            cdkTextareaAutosize
+            #autosize="cdkTextareaAutosize"
+            [cdkAutosizeMinRows]="1"
+            [cdkAutosizeMaxRows]="20">
+          </textarea>
+        </div>
+
+        @if (isExpanded && noteForm.get('labels')?.value?.length > 0) {
+          <div class="labels-container" style="padding: 0 16px; margin-bottom: 8px;">
+            @for (label of noteForm.get('labels')?.value; track label.id) {
+              <div class="label-chip">
+                <span class="label-name">{{ label.name }}</span>
+                <button type="button" class="remove-label-btn" (click)="removeCreatorLabel(label.id, $event)" data-tooltip="Remove label">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (isExpanded) {
+          <div class="creator-footer">
+            <div class="toolbar-icons">
+              <div class="palette-container" style="position: relative; display: inline-block;">
+                <button type="button" class="icon-btn" data-tooltip="Background options" (click)="toggleCreatorColorPalette($event)">
+                  <span class="material-symbols-outlined">palette</span>
+                </button>
+                @if (showCreatorColorPalette) {
+                  <div class="color-palette-menu" (click)="$event.stopPropagation()">
+                    @for (color of colors; track color.name) {
+                      <div 
+                        class="color-swatch"
+                        [class.default-color]="color.isDefault"
+                        [class.active]="noteForm.get('color')?.value === color.value"
+                        [style.background-color]="color.isDefault ? 'transparent' : color.value"
+                        [attr.data-tooltip]="color.name"
+                        (click)="changeCreatorColor(color.value, $event)">
+                        @if (color.isDefault) {
+                          <span class="material-symbols-outlined">format_color_reset</span>
+                        } @else if (noteForm.get('color')?.value === color.value) {
+                          <span class="material-symbols-outlined">check</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
+                <span class="material-symbols-outlined">image</span>
+              </button>
+              <button type="button" class="icon-btn" data-tooltip="Archive"><span class="material-symbols-outlined">archive</span></button>
+              
+              <div class="creator-more-container" style="position: relative; display: inline-block;">
+                <button type="button" class="icon-btn" data-tooltip="More" (click)="toggleCreatorMoreMenu($event)">
+                  <span class="material-symbols-outlined">more_vert</span>
+                </button>
+                
+                @if (showCreatorMoreMenu) {
+                  <div class="dropdown-menu more-menu" (click)="$event.stopPropagation()">
+                    <div class="menu-item" (click)="openCreatorLabelPopup($event)">
+                      {{ (noteForm.get('labels')?.value && noteForm.get('labels')?.value.length > 0) ? 'Change labels' : 'Add label' }}
+                    </div>
+                  </div>
+                }
+
+                @if (showCreatorLabelPopup) {
+                  <app-label-selection-popup
+                    [selectedLabels]="noteForm.get('labels')?.value || []"
+                    (labelsChanged)="onCreatorLabelsChanged($event)"
+                    (closePopup)="showCreatorLabelPopup = false"
+                    class="label-popup-container">
+                  </app-label-selection-popup>
+                }
+              </div>
+            </div>
+            <button type="button" class="btn btn-text" (click)="closeForm()">Close</button>
+          </div>
+        }
+      </form>
+    </div>
+    }
+
+    <!-- Pinned Notes Section -->
+    @if ((currentView === 'notes' || isLabelView) && noteService.searchPinnedNotes().length > 0) {
+      <div class="notes-section">
+        <h4 class="section-label">PINNED</h4>
+        <div class="masonry-grid"
+             cdkDropList 
+             [cdkDropListData]="noteService.searchPinnedNotes()"
+             (cdkDropListDropped)="drop($event)">
+          @for (note of noteService.searchPinnedNotes(); track note.id) {
+            <app-note-card 
+              cdkDrag
+              [note]="note" 
+              (click)="openNoteDialog(note)"
+              (delete)="onDeleteNote($event)"
+              (togglePin)="onUpdateNote($event)"
+              (toggleArchive)="onUpdateNote($event)"
+              (labelClick)="setView($event)">
+            </app-note-card>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Unpinned Notes Section -->
+    @if ((currentView === 'notes' || isLabelView) && noteService.searchUnpinnedNotes().length > 0) {
+      <div class="notes-section">
+        @if (noteService.searchPinnedNotes().length > 0) {
+          <h4 class="section-label">OTHERS</h4>
+        }
+        <div class="masonry-grid"
+             cdkDropList 
+             [cdkDropListData]="noteService.searchUnpinnedNotes()"
+             (cdkDropListDropped)="drop($event)">
+          @for (note of noteService.searchUnpinnedNotes(); track note.id) {
+            <app-note-card 
+              cdkDrag
+              [note]="note" 
+              (click)="openNoteDialog(note)"
+              (delete)="onDeleteNote($event)"
+              (togglePin)="onUpdateNote($event)"
+              (toggleArchive)="onUpdateNote($event)"
+              (labelClick)="setView($event)">
+            </app-note-card>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Home Empty State -->
+    @if (currentView === 'notes' && noteService.searchPinnedNotes().length === 0 && noteService.searchUnpinnedNotes().length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined empty-icon">lightbulb</span>
+        <p class="empty-text">Notes you add appear here</p>
+      </div>
+    }
+
+    <!-- Archive Section -->
+    @if (currentView === 'archive' || (isLabelView && noteService.searchArchivedNotes().length > 0)) {
+      <div class="notes-section">
+        @if (isLabelView) {
+          <h4 class="section-label">ARCHIVE</h4>
+        }
+        <div class="masonry-grid">
+          @for (note of noteService.searchArchivedNotes(); track note.id) {
+            <app-note-card 
+              [note]="note"
+              [isTrashView]="false"
+              (click)="openNoteDialog(note)"
+              (delete)="onDeleteNote($event)"
+              (togglePin)="onUpdateNote($event)"
+              (toggleArchive)="onUpdateNote($event)"
+              (labelClick)="setView($event)">
+            </app-note-card>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Archive Empty State -->
+    @if (currentView === 'archive' && noteService.searchArchivedNotes().length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined empty-icon">archive</span>
+        <p class="empty-text">Your archived notes appear here</p>
+      </div>
+    }
+
+    <!-- Label Empty State -->
+    @if (isLabelView && noteService.searchPinnedNotes().length === 0 && noteService.searchUnpinnedNotes().length === 0 && noteService.searchArchivedNotes().length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined empty-icon">label</span>
+        <p class="empty-text">No notes with this label yet</p>
+      </div>
+    }
+
+    <!-- Trash Section -->
+    @if (currentView === 'trash') {
+      <div class="notes-section trash-header">
+        <p class="trash-warning">Notes in Trash are deleted after 7 days.</p>
+        @if (noteService.trashedNotes().length > 0) {
+          <button class="btn btn-text empty-trash-btn" (click)="showEmptyTrashModal = true">Empty Trash</button>
+        }
+      </div>
+      <div class="notes-section">
+        <div class="masonry-grid">
+          @for (note of noteService.trashedNotes(); track note.id) {
+            <app-note-card 
+              [note]="note"
+              [isTrashView]="true"
+              (delete)="onDeleteNote($event)"
+              (togglePin)="onUpdateNote($event)"
+              (toggleArchive)="onUpdateNote($event)"
+              (labelClick)="setView($event)">
+            </app-note-card>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Trash Empty State -->
+    @if (currentView === 'trash' && noteService.trashedNotes().length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined empty-icon">delete</span>
+        <p class="empty-text">No notes in Trash</p>
+      </div>
+    }
+    }
+
+    </main>
+  </div>
+
+  <!-- Full Note Edit Dialog -->
+  @if (selectedNote) {
+    <app-note-dialog 
+      [note]="selectedNote" 
+      (closeDialog)="closeNoteDialog()"
+      (saveNote)="onSaveDialog($event)">
+    </app-note-dialog>
+  }
+
+  <!-- Empty Trash Confirmation Modal -->
+  @if (showEmptyTrashModal) {
+    <div class="modal-overlay" (click)="showEmptyTrashModal = false">
+      <div class="empty-trash-modal" (click)="$event.stopPropagation()">
+        <p>Empty trash? All notes in Trash will be permanently deleted.</p>
+        <div class="modal-actions">
+          <button class="btn btn-text cancel-btn" (click)="showEmptyTrashModal = false">Cancel</button>
+          <button class="btn btn-text confirm-btn" (click)="confirmEmptyTrash()">Empty Trash</button>
+        </div>
+      </div>
+    </div>
+  }
+  
+  @if (showEditLabelsModal) {
+    <app-edit-labels-modal (close)="showEditLabelsModal = false"></app-edit-labels-modal>
+  }
+
+  <app-toast></app-toast>
+</div>

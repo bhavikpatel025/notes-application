@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Notes.Api/Notes.Api.csproj" />
+  <Project Path="Notes.Application/Notes.Application.csproj" />
+  <Project Path="Notes.Domain/Notes.Domain.csproj" />
+  <Project Path="Notes.Infrastructure/Notes.Infrastructure.csproj" />
+</Solution>

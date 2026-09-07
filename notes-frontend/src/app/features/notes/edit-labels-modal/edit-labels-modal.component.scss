@@ -1,0 +1,117 @@
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.modal-container {
+  background: var(--gk-bg-primary);
+  width: 300px;
+  max-height: 80vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+}
+
+.modal-header {
+  padding: 16px;
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+}
+
+.modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #5f6368;
+    border-radius: 4px;
+  }
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--gk-text-primary);
+    font-size: 14px;
+    padding: 8px 4px;
+    outline: none;
+    font-family: inherit;
+    border-bottom: 1px solid transparent;
+    
+    &:focus {
+      border-bottom: 1px solid var(--gk-border);
+    }
+  }
+
+  .label-name {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 14px;
+    cursor: text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    margin: 0 4px;
+    opacity: 0.7;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .delete-btn {
+    .hover-icon { display: none; }
+    
+    &:hover {
+      .default-icon { display: none; }
+      .hover-icon { display: block; color: var(--gk-text-primary); }
+    }
+  }
+
+  &.editing {
+    .delete-btn {
+      .default-icon { display: none; }
+      .hover-icon { display: block; }
+    }
+  }
+}
+
+.create-row {
+  border-bottom: 1px solid var(--gk-border);
+  margin-bottom: 8px;
+}
+
+.modal-footer {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--gk-border);
+}

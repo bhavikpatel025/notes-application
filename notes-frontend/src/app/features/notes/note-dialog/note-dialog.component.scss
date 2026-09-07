@@ -1,0 +1,211 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75); /* Darker overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal-content {
+  background-color: var(--gk-bg-primary);
+  border: 1px solid var(--gk-border);
+  border-radius: var(--border-radius-sm);
+  width: 100%;
+  max-width: 600px;
+  max-height: calc(100vh - 48px); /* Prevents overflowing the screen */
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.6), 0 4px 8px 3px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto; /* Enables scrolling for images + text */
+
+  /* Custom dark scrollbar matching Google Keep perfectly */
+  &::-webkit-scrollbar {
+    width: 14px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #5f6368;
+    border: 4px solid var(--gk-bg-primary);
+    border-radius: 10px;
+    
+    &:hover {
+      background-color: #9aa0a6;
+    }
+  }
+}
+
+.title-input {
+  font-size: 22px;
+  font-family: var(--font-family);
+  font-weight: 500;
+  color: var(--gk-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 20px 24px 12px 24px;
+}
+
+.content-input {
+  font-size: 16px;
+  font-family: var(--font-family);
+  color: var(--gk-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 0 12px 0 24px; /* Less right padding so text gets closer to scrollbar */
+  margin-bottom: 16px;
+  min-height: 120px;
+  max-height: 65vh;
+  overflow-y: auto;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+
+  /* Custom dark scrollbar matching Google Keep perfectly */
+  &::-webkit-scrollbar {
+    width: 14px; /* Total width of the scrollbar area */
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #5f6368;
+    border: 4px solid var(--gk-bg-primary); /* Matches modal bg to look like it's floating */
+    border-radius: 10px;
+    
+    &:hover {
+      background-color: #9aa0a6;
+    }
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  
+  .toolbar-icons {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 8px;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: var(--gk-hover);
+  }
+
+  .material-symbols-outlined {
+    color: var(--gk-text-secondary);
+    font-size: 20px;
+  }
+}
+
+.close-btn {
+  font-weight: 500;
+  color: var(--gk-text-primary);
+}
+
+.labels-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 16px 16px 16px;
+
+  .label-chip {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--gk-text-primary);
+    max-width: 100%;
+    
+    .label-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .remove-label-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 4px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      
+      .material-symbols-outlined {
+        font-size: 14px;
+      }
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+    
+    &:hover .remove-label-btn {
+      display: inline-flex;
+    }
+  }
+}
+
+.more-menu {
+  bottom: 100%;
+  top: auto;
+  left: 0;
+  right: auto;
+  min-width: 150px;
+  margin-bottom: 4px;
+  
+  .menu-item {
+    position: relative;
+  }
+}
+
+.label-popup-container {
+  position: absolute;
+  bottom: 100%;
+  top: auto;
+  left: 0;
+  right: auto;
+  margin-bottom: 4px;
+  z-index: 1000;
+}
