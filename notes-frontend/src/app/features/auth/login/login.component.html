@@ -1,26 +1,48 @@
 <div class="auth-container">
-  <div class="auth-card">
-    <h1>Keep Notes</h1>
-    <p>Sign in to continue</p>
-
-    @if (error) {
-      <div class="error-banner">{{ error }}</div>
-    }
-
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="input-group">
-        <input type="email" formControlName="email" placeholder="Email" autocomplete="email" />
-      </div>
-      
-      <div class="input-group">
-        <input type="password" formControlName="password" placeholder="Password" autocomplete="current-password" />
+  <div class="auth-wrapper">
+    <div class="auth-banner">
+      <span class="material-symbols-outlined banner-icon">lightbulb</span>
+      <h2>Keep Notes</h2>
+      <p>Capture your thoughts, ideas, and tasks. Access them anywhere, anytime.</p>
+    </div>
+    
+    <div class="auth-content">
+      <div class="auth-header">
+        <h1>Welcome Back</h1>
+        <p>Sign in to your account to continue</p>
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="loginForm.invalid || isLoading">
-        {{ isLoading ? 'Signing in...' : 'Sign In' }}
-      </button>
-    </form>
+      @if (error) {
+        <div class="error-banner">{{ error }}</div>
+      }
 
-    <a routerLink="/register" class="auth-link">Create account</a>
+      <div class="social-login-container">
+        <asl-google-signin-button type="standard" size="large" text="continue_with" style="width: 100%; display: flex; justify-content: center;"></asl-google-signin-button>
+      </div>
+
+      <div class="auth-divider">
+        <span>or sign in with email</span>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="floating-group">
+          <input type="email" id="email" formControlName="email" placeholder=" " autocomplete="email" />
+          <label for="email">Email address</label>
+        </div>
+        
+        <div class="floating-group">
+          <input type="password" id="password" formControlName="password" placeholder=" " autocomplete="current-password" />
+          <label for="password">Password</label>
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="loginForm.invalid || isLoading">
+          {{ isLoading ? 'Signing in...' : 'Sign In' }}
+        </button>
+      </form>
+
+      <div class="auth-link-container">
+        Don't have an account? <a routerLink="/register">Create one</a>
+      </div>
+    </div>
   </div>
 </div>

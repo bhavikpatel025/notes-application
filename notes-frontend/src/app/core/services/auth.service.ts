@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { AuthResultDto } from '../../shared/models/auth.model';
 import { Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,11 @@ export class AuthService {
   // Signal to hold current user auth state
   public currentUser = signal<AuthResultDto | null>(null);
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient, 
+    private router: Router,
+    private socialAuthService: SocialAuthService
+  ) {
     this.loadUserFromStorage();
   }
 
@@ -30,9 +35,21 @@ export class AuthService {
     );
   }
 
+  googleLogin(idToken: string): Observable<AuthResultDto> {
+    return this.http.post<AuthResultDto>(`${this.apiUrl}/google-login`, { idToken }).pipe(
+      tap(res => this.setAuth(res))
+    );
+  }
+
   logout(): void {
     localStorage.removeItem('notes_auth');
     this.currentUser.set(null);
+    
+    // Also sign out from Google so they don't auto-login next time
+    if (this.socialAuthService) {
+      this.socialAuthService.signOut().catch((err: any) => console.log('Not logged in via Google'));
+    }
+
     this.router.navigate(['/login']);
   }
 

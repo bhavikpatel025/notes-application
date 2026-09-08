@@ -43,4 +43,24 @@ public class AuthController : ControllerBase
             return Unauthorized(new { Message = ex.Message });
         }
     }
+
+    public class GoogleLoginRequest
+    {
+        public required string IdToken { get; set; }
+    }
+
+    [HttpPost("google-login")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        try
+        {
+            var command = new Notes.Application.Auth.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken);
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return Unauthorized(new { Message = ex.Message });
+        }
+    }
 }

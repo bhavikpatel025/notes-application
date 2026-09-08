@@ -1,16 +1,17 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, GoogleSigninButtonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   error: string = '';
   isLoading = false;
@@ -18,6 +19,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private socialAuthService = inject(SocialAuthService);
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -30,6 +32,22 @@ export class LoginComponent {
     if (this.authService.getToken()) {
       this.router.navigate(['/dashboard']);
     }
+
+    this.socialAuthService.authState.subscribe((user) => {
+      if (user && user.idToken) {
+        this.isLoading = true;
+        this.authService.googleLogin(user.idToken).subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.router.navigate(['/dashboard']);
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.error = err.error?.message || 'Google Login failed. Please try again.';
+          }
+        });
+      }
+    });
   }
 
   onSubmit() {
