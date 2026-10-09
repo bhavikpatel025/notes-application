@@ -705,7 +705,11 @@ export class DashboardComponent implements OnInit {
     } else if (this.drawingTarget?.note) {
       const note = this.drawingTarget.note;
       const updatedImages = [...(note.imageUrls || []), imageUrl];
-      this.noteService.updateNote(note.id, { imageUrls: updatedImages }).subscribe();
+      const updatedNote: NoteDto = {
+        ...note,
+        imageUrls: updatedImages
+      };
+      this.noteService.updateNote(note.id, updatedNote).subscribe();
       if (this.selectedNote && this.selectedNote.id === note.id) {
         this.selectedNote = { ...this.selectedNote, imageUrls: updatedImages };
       }

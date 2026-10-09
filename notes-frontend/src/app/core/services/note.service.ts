@@ -140,12 +140,13 @@ export class NoteService {
   }
 
   updateNote(id: string, note: Partial<NoteDto>) {
-    if (note.labels) {
-      note.labelIds = note.labels.map(l => l.id);
+    const payload = { ...note, id };
+    if (payload.labels) {
+      payload.labelIds = payload.labels.map(l => l.id);
     }
-    const noteWithResolvedImages = this.resolveNoteImages(note as NoteDto);
+    const noteWithResolvedImages = this.resolveNoteImages(payload as NoteDto);
     const nowIso = new Date().toISOString();
-    return this.http.put(`${this.apiUrl}/${id}`, note).pipe(
+    return this.http.put(`${this.apiUrl}/${id}`, payload).pipe(
       tap(() => {
         this.notesSignal.update(notes => 
           notes.map(n => n.id === id ? { ...n, ...noteWithResolvedImages, updatedAt: nowIso } as NoteDto : n)

@@ -79,8 +79,14 @@ public class NotesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateNote(Guid id, [FromBody] UpdateNoteCommand command)
     {
-        if (id != command.Id)
+        if (command.Id == Guid.Empty)
+        {
+            command.Id = id;
+        }
+        else if (id != command.Id)
+        {
             return BadRequest("ID mismatch");
+        }
 
         command.UserId = GetUserId();
         var result = await _mediator.Send(command);
