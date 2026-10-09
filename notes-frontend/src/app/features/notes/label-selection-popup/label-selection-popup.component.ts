@@ -68,6 +68,23 @@ export class LabelSelectionPopupComponent {
     });
   }
 
+  onEnterKey(event: Event) {
+    event.stopPropagation();
+    const query = this.searchQuery().trim();
+    if (!query) return;
+
+    const filtered = this.filteredLabels();
+    if (filtered.length === 1 && filtered[0].name.toLowerCase() === query.toLowerCase()) {
+      this.toggleLabel(filtered[0]);
+      this.searchQuery.set('');
+    } else if (this.showCreateOption()) {
+      this.createAndSelectLabel();
+    } else if (filtered.length > 0) {
+      this.toggleLabel(filtered[0]);
+      this.searchQuery.set('');
+    }
+  }
+
   onClose(event: Event) {
     event.stopPropagation();
     this.closePopup.emit();

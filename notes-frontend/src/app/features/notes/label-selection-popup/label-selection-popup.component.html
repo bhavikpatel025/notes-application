@@ -4,7 +4,7 @@
   </div>
 
   <div class="search-box">
-    <input type="text" placeholder="Enter label name" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" autofocus>
+    <input type="text" placeholder="Enter label name" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" (keydown.enter)="onEnterKey($event)" autofocus>
     <span class="material-symbols-outlined search-icon">search</span>
   </div>
 
@@ -12,8 +12,11 @@
     @for (label of filteredLabels(); track label.id) {
       <div class="label-item" (click)="toggleLabel(label, $event)">
         <div class="checkbox">
-          <span class="material-symbols-outlined check-icon" *ngIf="hasLabel(label)">check_box</span>
-          <span class="material-symbols-outlined uncheck-icon" *ngIf="!hasLabel(label)">check_box_outline_blank</span>
+          @if (hasLabel(label)) {
+            <span class="material-symbols-outlined check-icon">check_box</span>
+          } @else {
+            <span class="material-symbols-outlined uncheck-icon">check_box_outline_blank</span>
+          }
         </div>
         <span class="label-name">{{ label.name }}</span>
       </div>

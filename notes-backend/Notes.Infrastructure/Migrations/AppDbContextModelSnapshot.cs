@@ -282,7 +282,16 @@ namespace Notes.Infrastructure.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReminderFired")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsTrashed")
@@ -291,9 +300,30 @@ namespace Notes.Infrastructure.Migrations
                     b.Property<int>("OrderIndex")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PinHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PinSalt")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PublicSlug")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PublicViewCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ReminderDateTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReminderRepeat")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -304,9 +334,160 @@ namespace Notes.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PublicSlug")
+                        .IsUnique();
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Notes");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.NoteCollaborator", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("NoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("NoteId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("NoteCollaborators");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.NoteHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<string>>("ImageUrls")
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid>("NoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TodoItemsJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoteId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("NoteHistories");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("NoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SenderEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoteId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.TodoItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("NoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoteId");
+
+                    b.ToTable("TodoItems");
                 });
 
             modelBuilder.Entity("LabelNote", b =>
@@ -397,9 +578,85 @@ namespace Notes.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Notes.Domain.Entities.NoteCollaborator", b =>
+                {
+                    b.HasOne("Notes.Domain.Entities.Note", "Note")
+                        .WithMany("Collaborators")
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Notes.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.NoteHistory", b =>
+                {
+                    b.HasOne("Notes.Domain.Entities.Note", "Note")
+                        .WithMany("Histories")
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Notes.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("Notes.Domain.Entities.Note", "Note")
+                        .WithMany()
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Notes.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.TodoItem", b =>
+                {
+                    b.HasOne("Notes.Domain.Entities.Note", "Note")
+                        .WithMany("TodoItems")
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
+                });
+
             modelBuilder.Entity("Notes.Domain.Entities.AppUser", b =>
                 {
                     b.Navigation("Notes");
+                });
+
+            modelBuilder.Entity("Notes.Domain.Entities.Note", b =>
+                {
+                    b.Navigation("Collaborators");
+
+                    b.Navigation("Histories");
+
+                    b.Navigation("TodoItems");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,121 @@
+<div class="collaborator-modal-overlay" (click)="onOverlayClick($event)">
+  <div class="collaborator-modal" (click)="onModalClick($event)">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">Collaborators</h2>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      
+      <!-- Owner Row -->
+      <div class="person-row owner-row">
+        <div class="avatar-circle owner-avatar" [style.background-color]="getAvatarBgColor(ownerEmail)">
+          <span>{{ getInitial(ownerName || ownerEmail) }}</span>
+        </div>
+        <div class="person-info">
+          <div class="person-name-row">
+            <span class="person-name">{{ ownerName || 'Owner' }}</span>
+            <span class="owner-badge"> (Owner)</span>
+          </div>
+          <span class="person-email">{{ ownerEmail }}</span>
+        </div>
+      </div>
+
+      <!-- Collaborators List -->
+      @if (collaborators.length > 0) {
+        <div class="collaborators-list">
+          @for (c of collaborators; track c.userId) {
+            <div class="person-row collaborator-row">
+              <div class="avatar-circle" [style.background-color]="getAvatarBgColor(c.email)">
+                <span>{{ getInitial(c.fullName || c.email) }}</span>
+              </div>
+              <div class="person-info">
+                <span class="person-name">{{ c.fullName || c.email }}</span>
+                <span class="person-email">{{ c.email }}</span>
+              </div>
+              
+              @if (canRemove(c)) {
+                <button 
+                  type="button" 
+                  class="icon-btn remove-btn" 
+                  [attr.data-tooltip]="c.userId === currentUserId ? 'Leave note' : 'Remove collaborator'"
+                  (click)="removeCollaborator(c, $event)"
+                  [disabled]="isBusy">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Add Collaborator Input Row (Only Owner can add) -->
+      @if (isOwner) {
+        <div class="person-row add-row">
+          <div class="avatar-circle add-avatar">
+            <span class="material-symbols-outlined">person_add</span>
+          </div>
+          <div class="input-container">
+            <input 
+              #emailInput
+              type="email" 
+              class="collaborator-input" 
+              placeholder="Person or email to share with"
+              [(ngModel)]="newEmail"
+              (keydown.enter)="addCollaborator()"
+              (input)="clearError()"
+              [disabled]="isBusy" />
+            
+            @if (newEmail.trim()) {
+              <button 
+                type="button" 
+                class="icon-btn check-btn" 
+                data-tooltip="Add" 
+                (click)="addCollaborator()"
+                [disabled]="isBusy">
+                <span class="material-symbols-outlined">check</span>
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="info-note">
+          <span class="material-symbols-outlined info-icon">info</span>
+          <span>Only the note owner can add other collaborators.</span>
+        </div>
+      }
+
+      <!-- Error / Status Message -->
+      @if (errorMessage) {
+        <div class="error-banner">
+          <span class="material-symbols-outlined error-icon">error</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      @if (isBusy) {
+        <div class="loading-state">
+          <span class="material-symbols-outlined spin-icon">sync</span>
+          <span>Updating collaborators...</span>
+        </div>
+      }
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="isBusy">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-save" (click)="onSave()" [disabled]="isBusy">
+        Save
+      </button>
+    </div>
+
+  </div>
+</div>

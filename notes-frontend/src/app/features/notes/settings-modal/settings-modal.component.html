@@ -1,0 +1,123 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="settings-modal-card" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="settings-modal-header">
+      <div class="header-left">
+        <span class="material-symbols-outlined header-icon">settings</span>
+        <h3 class="settings-modal-title">Settings</h3>
+      </div>
+      <button type="button" class="icon-btn close-btn" (click)="onClose()" title="Close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="settings-modal-body">
+      <!-- 1. Appearance / Theme Section -->
+      <section class="settings-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="material-symbols-outlined section-icon">palette</span>
+            <div>
+              <h4 class="section-title">Appearance</h4>
+              <p class="section-subtitle">Customize how Keep Notes looks on your device</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="theme-options-grid">
+          <button 
+            type="button" 
+            class="theme-card" 
+            [class.active]="!isDarkMode" 
+            (click)="onToggleTheme(false)">
+            <div class="theme-preview light-preview">
+              <span class="material-symbols-outlined theme-icon">light_mode</span>
+            </div>
+            <div class="theme-label">
+              <span>Light theme</span>
+              @if (!isDarkMode) {
+                <span class="material-symbols-outlined check-icon">check_circle</span>
+              }
+            </div>
+          </button>
+
+          <button 
+            type="button" 
+            class="theme-card" 
+            [class.active]="isDarkMode" 
+            (click)="onToggleTheme(true)">
+            <div class="theme-preview dark-preview">
+              <span class="material-symbols-outlined theme-icon">dark_mode</span>
+            </div>
+            <div class="theme-label">
+              <span>Dark theme</span>
+              @if (isDarkMode) {
+                <span class="material-symbols-outlined check-icon">check_circle</span>
+              }
+            </div>
+          </button>
+        </div>
+      </section>
+
+      <div class="settings-divider"></div>
+
+      <!-- 2. Security Section -->
+      <section class="settings-section">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="material-symbols-outlined section-icon">lock</span>
+            <div>
+              <h4 class="section-title">Security & Password</h4>
+              <p class="section-subtitle">Manage your password and account protection</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Account Password</span>
+            <span class="setting-desc">Change your password to keep your notes and vault safe</span>
+          </div>
+          <button type="button" class="btn btn-secondary" (click)="onChangePassword()">
+            <span class="material-symbols-outlined">lock_reset</span>
+            <span>Change password</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="settings-divider"></div>
+
+      <!-- 3. Danger Zone Section -->
+      <section class="settings-section danger-zone-section">
+        <div class="danger-zone-card">
+          <div class="danger-zone-header">
+            <span class="material-symbols-outlined danger-icon">warning</span>
+            <div>
+              <h4 class="danger-title">Danger Zone</h4>
+              <p class="danger-subtitle">Irreversible actions that affect your entire account</p>
+            </div>
+          </div>
+
+          <div class="danger-row">
+            <div class="danger-info">
+              <span class="danger-name">Delete account</span>
+              <span class="danger-desc">Permanently remove your account, notes, checklists, and labels</span>
+            </div>
+            <button type="button" class="btn btn-danger-outline" (click)="onDeleteAccount()">
+              <span class="material-symbols-outlined">delete_forever</span>
+              <span>Delete account</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="settings-modal-footer">
+      <button type="button" class="btn btn-done" (click)="onClose()">
+        Done
+      </button>
+    </div>
+  </div>
+</div>

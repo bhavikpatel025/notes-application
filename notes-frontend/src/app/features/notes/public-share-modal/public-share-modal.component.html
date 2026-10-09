@@ -1,0 +1,88 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="share-modal-card" (click)="$event.stopPropagation()">
+    
+    <div class="share-modal-header">
+      <div class="header-left">
+        <div class="globe-badge">
+          <span class="material-symbols-outlined">public</span>
+        </div>
+        <div>
+          <h3 class="share-modal-title">Share to Web</h3>
+          <p class="share-modal-subtitle">Publish this note and generate a public read-only link</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn close-x-btn" (click)="onClose()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="share-modal-body">
+      <!-- Toggle Row -->
+      <div class="toggle-row">
+        <div class="toggle-meta">
+          <span class="toggle-title">Publish to web</span>
+          <span class="toggle-desc">Anyone with the link can view this note without logging in</span>
+        </div>
+        <label class="switch">
+          <input 
+            type="checkbox" 
+            [checked]="isPublic" 
+            [disabled]="isBusy" 
+            (change)="onTogglePublic($event)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Public Link Active View -->
+      @if (isPublic && publicUrl) {
+        <div class="link-box-container">
+          <label class="link-label">Public link</label>
+          <div class="link-input-group">
+            <span class="material-symbols-outlined link-icon">link</span>
+            <input 
+              type="text" 
+              class="link-input" 
+              [value]="publicUrl" 
+              readonly 
+              (click)="$any($event.target).select()">
+            <button 
+              type="button" 
+              class="btn-copy" 
+              (click)="copyLink()" 
+              [class.copied]="copied"
+              [attr.data-tooltip]="copied ? 'Copied!' : 'Copy link'">
+              <span class="material-symbols-outlined">
+                {{ copied ? 'check' : 'content_copy' }}
+              </span>
+              <span>{{ copied ? 'Copied' : 'Copy' }}</span>
+            </button>
+          </div>
+
+          <div class="link-meta-row">
+            <div class="views-badge">
+              <span class="material-symbols-outlined">visibility</span>
+              <span>{{ note.publicViewCount || 0 }} {{ (note.publicViewCount || 0) === 1 ? 'view' : 'views' }}</span>
+            </div>
+            <button type="button" class="btn-text-action" (click)="openLink()">
+              <span>Preview page</span>
+              <span class="material-symbols-outlined icon-sm">open_in_new</span>
+            </button>
+          </div>
+        </div>
+      } @else {
+        <!-- Private State View -->
+        <div class="private-info-box">
+          <span class="material-symbols-outlined private-icon">lock</span>
+          <div class="private-text">
+            <strong>This note is private</strong>
+            <p>Only you and invited collaborators can view or edit this note.</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="share-modal-footer">
+      <button type="button" class="btn btn-close" (click)="onClose()">Done</button>
+    </div>
+  </div>
+</div>

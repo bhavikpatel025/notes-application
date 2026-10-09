@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Notes.Application.Interfaces;
@@ -8,9 +9,11 @@ using Notes.Domain.Entities;
 using Notes.Infrastructure.Authentication;
 using Notes.Infrastructure.Persistence;
 using Notes.Infrastructure.Services;
+using Notes.Infrastructure.Security;
 using System.Text;
 using Notes.Application;
 using Notes.Infrastructure;
+using Notes.Infrastructure.Hubs;
 using Notes.Api.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddHostedService<OrphanedFileCleanupJob>();
+builder.Services.AddHostedService<ReminderBackgroundService>();
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
 builder.Services.AddCors(options =>
@@ -26,13 +30,19 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
 // Database Configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions => npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+});
 
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
 
@@ -41,12 +51,24 @@ builder.Services.AddIdentity<AppUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+// Configure password reset token lifespan to 3 hours
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromHours(3);
+});
+
 // Application Layer (MediatR)
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
 
 // Infrastructure Layer
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IImageUploadService, CloudinaryImageUploadService>();
+builder.Services.AddScoped<INoteNotificationService, NoteNotificationService>();
+builder.Services.AddScoped<IEmailNotificationService, SmtpEmailService>();
+builder.Services.AddScoped<IEncryptionService, EncryptionService>();
+
+// SignalR Real-Time Service
+builder.Services.AddSignalR();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? throw new ArgumentNullException("JwtSecret");
@@ -67,6 +89,20 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notes"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -130,6 +166,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<NotesHub>("/hubs/notes");
 app.MapControllers();
 
 app.Run();

@@ -11,7 +11,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err) => {
-      if ([401, 403].includes(err.status)) {
+      // Exclude PIN lock/unlock/remove-lock endpoints, public endpoints, and login from session auto-logout
+      const isLockRelated = req.url.includes('/unlock') || req.url.includes('/lock') || req.url.includes('/remove-lock');
+      const isPublicEndpoint = req.url.includes('/public/');
+      const isAuthLogin = req.url.includes('/Auth/login');
+
+      if ([401, 403].includes(err.status) && !isLockRelated && !isAuthLogin && !isPublicEndpoint) {
         // Auto logout if 401 Unauthorized or 403 Forbidden response returned from api
         authService.logout();
       }

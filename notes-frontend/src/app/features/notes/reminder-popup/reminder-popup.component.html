@@ -1,0 +1,106 @@
+<div class="reminder-popup" (click)="$event.stopPropagation()">
+  
+  @if (!isCustomView) {
+    <!-- VIEW 1: PRESETS -->
+    <div class="popup-header">
+      <h4>Remind me later</h4>
+      <p class="subtitle">Saved in Keep Reminders</p>
+    </div>
+
+    <div class="presets-list">
+      <div class="preset-item" (click)="selectLaterToday($event)">
+        <span class="preset-label">Later today</span>
+        <span class="preset-time">{{ laterTodayTime }}</span>
+      </div>
+
+      <div class="preset-item" (click)="selectTomorrow($event)">
+        <span class="preset-label">Tomorrow</span>
+        <span class="preset-time">{{ tomorrowTime }}</span>
+      </div>
+
+      <div class="preset-item" (click)="selectNextWeek($event)">
+        <span class="preset-label">Next week</span>
+        <span class="preset-time">{{ nextWeekTime }}</span>
+      </div>
+
+      <div class="preset-item custom-pick-item" (click)="switchToCustom($event)">
+        <div class="custom-label">
+          <span class="material-symbols-outlined">schedule</span>
+          <span>Pick date & time</span>
+        </div>
+      </div>
+
+      @if (currentReminderDateTime) {
+        <div class="preset-item delete-reminder-item" (click)="deleteReminder($event)">
+          <div class="custom-label text-danger">
+            <span class="material-symbols-outlined">notifications_off</span>
+            <span>Delete reminder</span>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- VIEW 2: PICK DATE & TIME -->
+    <div class="custom-header">
+      <button type="button" class="back-btn" (click)="switchBackToPresets($event)">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h4>Pick date & time</h4>
+    </div>
+
+    <div class="custom-form">
+      <!-- Date Field -->
+      <div class="form-group">
+        <label>Date</label>
+        <div class="input-container">
+          <input type="date" [(ngModel)]="selectedDate" class="custom-input">
+        </div>
+      </div>
+
+      <!-- Time Field -->
+      <div class="form-group">
+        <label>Time</label>
+        <div class="input-container">
+          <select [(ngModel)]="selectedTimeType" class="custom-select">
+            <option value="morning">Morning (8:00 AM)</option>
+            <option value="afternoon">Afternoon (1:00 PM)</option>
+            <option value="evening">Evening (6:00 PM)</option>
+            <option value="night">Night (8:00 PM)</option>
+            <option value="custom">Custom time...</option>
+          </select>
+        </div>
+      </div>
+
+      @if (selectedTimeType === 'custom') {
+        <div class="form-group">
+          <label>Custom Time</label>
+          <div class="input-container">
+            <input type="time" [(ngModel)]="customTime" class="custom-input">
+          </div>
+        </div>
+      }
+
+      <!-- Repeat Field -->
+      <div class="form-group">
+        <label>Repeat</label>
+        <div class="input-container">
+          <select [(ngModel)]="selectedRepeat" class="custom-select">
+            <option [value]="0">Does not repeat</option>
+            <option [value]="1">Daily</option>
+            <option [value]="2">Weekly</option>
+            <option [value]="3">Monthly</option>
+            <option [value]="4">Yearly</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="custom-actions">
+        @if (currentReminderDateTime) {
+          <button type="button" class="btn btn-text text-danger" (click)="deleteReminder($event)">Delete</button>
+        }
+        <button type="button" class="btn btn-text save-btn" (click)="saveCustomReminder($event)">Save</button>
+      </div>
+    </div>
+  }
+</div>

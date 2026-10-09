@@ -1,0 +1,78 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="pin-modal-card" (click)="$event.stopPropagation()">
+    
+    <div class="pin-modal-header">
+      <div class="lock-icon-badge" [class.danger]="mode === 'remove-lock'">
+        <span class="material-symbols-outlined">
+          {{ mode === 'remove-lock' ? 'lock_open' : 'lock' }}
+        </span>
+      </div>
+      <h3 class="pin-modal-title">{{ title }}</h3>
+      <p class="pin-modal-subtitle">{{ subtitle }}</p>
+    </div>
+
+    @if (errorMessage) {
+      <div class="pin-error-alert">
+        <span class="material-symbols-outlined error-icon">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="onSubmit()" class="pin-form">
+      <div class="form-group">
+        <label for="pinInput">{{ mode === 'lock' ? 'New PIN' : 'Enter PIN' }}</label>
+        <div class="input-with-icon">
+          <input 
+            #pinInput
+            id="pinInput"
+            [type]="showPin ? 'text' : 'password'" 
+            [(ngModel)]="pin" 
+            name="pin"
+            autocomplete="off"
+            maxlength="16"
+            inputmode="numeric"
+            placeholder="••••"
+            (keydown)="onPinKeydown($event)"
+            [disabled]="isBusy">
+          <button type="button" class="toggle-visibility-btn" (click)="showPin = !showPin" tabindex="-1">
+            <span class="material-symbols-outlined">
+              {{ showPin ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      @if (mode === 'lock') {
+        <div class="form-group">
+          <label for="confirmPinInput">Confirm PIN</label>
+          <div class="input-with-icon">
+            <input 
+              id="confirmPinInput"
+              [type]="showPin ? 'text' : 'password'" 
+              [(ngModel)]="confirmPin" 
+              name="confirmPin"
+              autocomplete="off"
+              maxlength="16"
+              inputmode="numeric"
+              placeholder="••••"
+              (keydown)="onPinKeydown($event)"
+              [disabled]="isBusy">
+          </div>
+        </div>
+      }
+
+      <div class="pin-modal-actions">
+        <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="isBusy">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-submit" [disabled]="isBusy || !pin">
+          @if (isBusy) {
+            <span class="spinner"></span>
+          } @else {
+            {{ submitButtonLabel }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

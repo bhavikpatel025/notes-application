@@ -36,8 +36,25 @@
         </div>
         
         <div class="floating-group">
-          <input type="password" id="password" formControlName="password" placeholder=" " autocomplete="new-password" />
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="password" 
+            formControlName="password" 
+            placeholder=" " 
+            autocomplete="new-password" 
+            class="has-toggle" 
+          />
           <label for="password">Password</label>
+          <button 
+            type="button" 
+            class="toggle-password-btn" 
+            (click)="showPassword = !showPassword" 
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            tabindex="-1">
+            <span class="material-symbols-outlined">
+              {{ showPassword ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
         </div>
 
         <button type="submit" class="btn-submit" [disabled]="registerForm.invalid || isLoading">

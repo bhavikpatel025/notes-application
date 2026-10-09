@@ -31,23 +31,86 @@
 
     @if (!isMobileSearchActive) {
       <div class="nav-actions">
-        <!-- Settings Menu -->
-        <div class="menu-container">
-          <button class="icon-btn" (click)="toggleSettingsMenu()" data-tooltip="Settings">
-            <span class="material-symbols-outlined">settings</span>
+
+        <!-- Notifications Bell Menu -->
+        <div class="menu-container notification-menu-container">
+          <button class="icon-btn notification-bell-btn" (click)="toggleNotificationMenu()" data-tooltip="Notifications">
+            <span class="material-symbols-outlined">notifications</span>
+            @if (notificationService.unreadCount() > 0) {
+              <span class="notification-badge">{{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}</span>
+            }
           </button>
           
-          @if (showSettingsMenu) {
-            <div class="dropdown-menu">
-              <div class="menu-item" (click)="toggleTheme()">
-                {{ isDarkMode() ? 'Disable dark theme' : 'Enable dark theme' }}
+          @if (showNotificationMenu) {
+            <div class="dropdown-menu notification-dropdown-menu" (click)="$event.stopPropagation()">
+              <div class="notification-dropdown-header">
+                <div class="header-title-row">
+                  <span class="dropdown-title">Notifications</span>
+                  @if (notificationService.unreadCount() > 0) {
+                    <span class="unread-pill">{{ notificationService.unreadCount() }} new</span>
+                  }
+                </div>
+                <div class="header-actions">
+                  @if (notificationService.unreadCount() > 0) {
+                    <button type="button" class="text-action-btn" (click)="markAllNotificationsAsRead()">Mark all as read</button>
+                  }
+                  @if (notificationService.notifications().length > 0) {
+                    <button type="button" class="text-action-btn clear-all-btn" (click)="clearAllNotificationsList()">Clear all</button>
+                  }
+                </div>
+              </div>
+
+              <div class="notification-list">
+                @if (notificationService.notifications().length === 0) {
+                  <div class="empty-notifications">
+                    <span class="material-symbols-outlined empty-icon">notifications_off</span>
+                    <p>No notifications yet</p>
+                  </div>
+                } @else {
+                  @for (n of notificationService.notifications(); track n.id) {
+                    <div class="notification-item" [class.unread]="!n.isRead" (click)="onNotificationClick(n)">
+                      <div class="notif-icon-col">
+                        @if (n.type === 1) {
+                          <div class="notif-icon-circle reminder-icon">
+                            <span class="material-symbols-outlined">schedule</span>
+                          </div>
+                        } @else if (n.type === 2) {
+                          <div class="notif-icon-circle collab-icon">
+                            <span class="material-symbols-outlined">group_add</span>
+                          </div>
+                        } @else {
+                          <div class="notif-icon-circle default-icon">
+                            <span class="material-symbols-outlined">notifications</span>
+                          </div>
+                        }
+                      </div>
+
+                      <div class="notification-content-col">
+                        <div class="notif-title">{{ n.title }}</div>
+                        <div class="notif-message">{{ n.message }}</div>
+                        <div class="notif-time">{{ n.createdAt | timeAgo }}</div>
+                      </div>
+
+                      <div class="notification-actions-col" (click)="$event.stopPropagation()">
+                        @if (!n.isRead) {
+                          <button type="button" class="action-icon-btn dot-btn" data-tooltip="Mark as read" (click)="markNotificationAsRead(n, $event)">
+                            <span class="unread-dot"></span>
+                          </button>
+                        }
+                        <button type="button" class="action-icon-btn delete-btn" data-tooltip="Delete" (click)="deleteNotificationItem(n, $event)">
+                          <span class="material-symbols-outlined">close</span>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                }
               </div>
             </div>
           }
         </div>
 
         <!-- Profile Menu -->
-        <div class="menu-container">
+        <div class="menu-container profile-menu-container">
           <button class="avatar-btn tooltip-right" (click)="toggleProfileMenu()" [attr.data-tooltip]="authService.currentUser()?.fullName + '\n' + authService.currentUser()?.email">
             <div class="avatar-circle">
               {{ authService.currentUser()?.fullName?.charAt(0) | uppercase }}
@@ -60,6 +123,34 @@
                 <strong>{{ authService.currentUser()?.fullName }}</strong>
                 <span>{{ authService.currentUser()?.email }}</span>
               </div>
+              <div class="menu-divider"></div>
+              <div class="menu-item has-submenu" (click)="toggleSettingsSubmenu($event)">
+                <div class="menu-item-left">
+                  <span class="material-symbols-outlined">settings</span>
+                  <span>Settings</span>
+                </div>
+                <span class="material-symbols-outlined submenu-arrow" [class.rotated]="showSettingsSubmenu">
+                  expand_more
+                </span>
+              </div>
+
+              @if (showSettingsSubmenu) {
+                <div class="settings-submenu">
+                  <div class="menu-item submenu-item" (click)="toggleTheme()">
+                    <span class="material-symbols-outlined">{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</span>
+                    <span>{{ isDarkMode() ? 'Disable dark theme' : 'Enable dark theme' }}</span>
+                  </div>
+                  <div class="menu-item submenu-item" (click)="openChangePasswordModal()">
+                    <span class="material-symbols-outlined">lock_reset</span>
+                    <span>Change password</span>
+                  </div>
+                  <div class="menu-item submenu-item text-danger" (click)="openDeleteAccountModal()">
+                    <span class="material-symbols-outlined">delete_forever</span>
+                    <span>Delete account</span>
+                  </div>
+                </div>
+              }
+
               <div class="menu-divider"></div>
               <div class="menu-item text-danger" (click)="logout()">
                 <span class="material-symbols-outlined">logout</span>
@@ -81,6 +172,11 @@
       <div class="nav-item" [class.active]="currentView === 'notes'" (click)="setView('notes')" [attr.data-tooltip]="isSidebarCollapsed ? 'Notes' : null">
         <span class="material-symbols-outlined">lightbulb</span>
         <span class="label">Notes</span>
+      </div>
+
+      <div class="nav-item" [class.active]="currentView === 'reminders'" (click)="setView('reminders')" [attr.data-tooltip]="isSidebarCollapsed ? 'Reminders' : null">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="label">Reminders</span>
       </div>
       
       @for (label of labelService.labels(); track label.id) {
@@ -120,11 +216,16 @@
                 <app-note-card 
                   [note]="note" 
                   [searchQuery]="noteService.searchQuery()"
-                  (click)="openNoteDialog(note)"
+                  (click)="onNoteCardClick(note)"
                   (delete)="onDeleteNote($event)"
                   (togglePin)="onUpdateNote($event)"
                   (toggleArchive)="onUpdateNote($event)"
-                  (labelClick)="setView($event)">
+                  (labelClick)="setView($event)"
+                  (versionHistory)="openVersionHistory($event)"
+                  (openCollaborators)="openCollaborators($event)"
+                  (requestLock)="openPinModal($event.note, $event.mode)"
+                  (openPublicShare)="openPublicShareModal($event)"
+                  (openDrawing)="openDrawingForNote($event)">
                 </app-note-card>
               }
             </div>
@@ -142,11 +243,16 @@
                 <app-note-card 
                   [note]="note" 
                   [searchQuery]="noteService.searchQuery()"
-                  (click)="openNoteDialog(note)"
+                  (click)="onNoteCardClick(note)"
                   (delete)="onDeleteNote($event)"
                   (togglePin)="onUpdateNote($event)"
                   (toggleArchive)="onUpdateNote($event)"
-                  (labelClick)="setView($event)">
+                  (labelClick)="setView($event)"
+                  (versionHistory)="openVersionHistory($event)"
+                  (openCollaborators)="openCollaborators($event)"
+                  (requestLock)="openPinModal($event.note, $event.mode)"
+                  (openPublicShare)="openPublicShareModal($event)"
+                  (openDrawing)="openDrawingForNote($event)">
                 </app-note-card>
               }
             </div>
@@ -162,11 +268,16 @@
                 <app-note-card 
                   [note]="note" 
                   [searchQuery]="noteService.searchQuery()"
-                  (click)="openNoteDialog(note)"
+                  (click)="onNoteCardClick(note)"
                   (delete)="onDeleteNote($event)"
                   (togglePin)="onUpdateNote($event)"
                   (toggleArchive)="onUpdateNote($event)"
-                  (labelClick)="setView($event)">
+                  (labelClick)="setView($event)"
+                  (versionHistory)="openVersionHistory($event)"
+                  (openCollaborators)="openCollaborators($event)"
+                  (requestLock)="openPinModal($event.note, $event.mode)"
+                  (openPublicShare)="openPublicShareModal($event)"
+                  (openDrawing)="openDrawingForNote($event)">
                 </app-note-card>
               }
             </div>
@@ -184,7 +295,7 @@
     } @else {
     
     <!-- Note Creator -->
-    @if (currentView === 'notes' || isLabelView) {
+    @if (currentView === 'notes' || isLabelView || currentView === 'reminders') {
       <div class="note-creator" [class.expanded]="isExpanded" [style.background-color]="noteForm.get('color')?.value !== '#FFFFFF' ? noteForm.get('color')?.value : 'var(--gk-bg-primary)'">
       <form [formGroup]="noteForm">
         <!-- Hidden File Input -->
@@ -204,25 +315,120 @@
           </div>
         }
 
-        @if (isExpanded) {
+        @if (!isExpanded) {
+          <div class="collapsed-creator-row">
+            <input type="text" placeholder="Take a note..." (focus)="expandForm()" readonly class="collapsed-input">
+            <div class="collapsed-actions">
+              <button type="button" class="icon-btn" (click)="expandFormAsChecklist()" data-tooltip="New list">
+                <span class="material-symbols-outlined">check_box</span>
+              </button>
+              <button type="button" class="icon-btn" (click)="openDrawingForNewNote()" data-tooltip="New note with drawing">
+                <span class="material-symbols-outlined">brush</span>
+              </button>
+              <button type="button" class="icon-btn" (click)="triggerFileInput(fileInput, $event)" data-tooltip="New note with image">
+                <span class="material-symbols-outlined">image</span>
+              </button>
+            </div>
+          </div>
+        } @else {
           <input type="text" formControlName="title" placeholder="Title" class="title-input">
-        }
-        
-        <div class="input-wrapper">
-          <textarea 
-            formControlName="content" 
-            placeholder="Take a note..." 
-            (focus)="expandForm()"
-            rows="1"
-            cdkTextareaAutosize
-            #autosize="cdkTextareaAutosize"
-            [cdkAutosizeMinRows]="1"
-            [cdkAutosizeMaxRows]="20">
-          </textarea>
-        </div>
+          
+          @if (!isCreatorChecklist) {
+            <div class="input-wrapper">
+              <textarea 
+                formControlName="content" 
+                placeholder="Take a note..." 
+                rows="1"
+                cdkTextareaAutosize
+                #autosize="cdkTextareaAutosize"
+                [cdkAutosizeMinRows]="1"
+                [cdkAutosizeMaxRows]="20">
+              </textarea>
+            </div>
+          } @else {
+            <div class="creator-checklist-container">
+              <div class="todo-items-list">
+                @for (item of uncompletedCreatorTodoItems; track item.id || item.text; let i = $index) {
+                  <div class="creator-todo-row">
+                    <button type="button" class="checkbox-btn" (click)="toggleCreatorTodoItem(item)">
+                      <span class="material-symbols-outlined checkbox-icon">
+                        {{ item.isCompleted ? 'check_box' : 'check_box_outline_blank' }}
+                      </span>
+                    </button>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="item.text" 
+                      [ngModelOptions]="{standalone: true}"
+                      placeholder="List item" 
+                      class="creator-todo-input"
+                      (keydown)="onCreatorTodoItemKeydown($event, item, i)">
+                    <button type="button" class="remove-todo-btn" (click)="removeCreatorTodoItem(item)" data-tooltip="Delete item">
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
 
-        @if (isExpanded && noteForm.get('labels')?.value?.length > 0) {
+              <!-- Add New Item Row -->
+              <div class="creator-todo-row add-todo-row">
+                <span class="material-symbols-outlined add-icon">add</span>
+                <input 
+                  type="text" 
+                  [(ngModel)]="newCreatorTodoText" 
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="List item" 
+                  class="creator-todo-input new-item-input"
+                  (keydown)="onNewCreatorTodoKeydown($event)"
+                  (blur)="addCreatorTodoItem()">
+              </div>
+
+              <!-- Completed items -->
+              @if (completedCreatorTodoItems.length > 0) {
+                <div class="completed-section">
+                  <div class="completed-header" (click)="showCreatorCompleted = !showCreatorCompleted">
+                    <span class="material-symbols-outlined expand-icon">
+                      {{ showCreatorCompleted ? 'expand_more' : 'chevron_right' }}
+                    </span>
+                    <span>{{ completedCreatorTodoItems.length }} Completed {{ completedCreatorTodoItems.length === 1 ? 'item' : 'items' }}</span>
+                  </div>
+
+                  @if (showCreatorCompleted) {
+                    <div class="todo-items-list completed-list">
+                      @for (item of completedCreatorTodoItems; track item.id || item.text) {
+                        <div class="creator-todo-row completed-row">
+                          <button type="button" class="checkbox-btn" (click)="toggleCreatorTodoItem(item)">
+                            <span class="material-symbols-outlined checkbox-icon checked">check_box</span>
+                          </button>
+                          <input 
+                            type="text" 
+                            [(ngModel)]="item.text" 
+                            [ngModelOptions]="{standalone: true}"
+                            class="creator-todo-input completed-input">
+                          <button type="button" class="remove-todo-btn" (click)="removeCreatorTodoItem(item)" data-tooltip="Delete item">
+                            <span class="material-symbols-outlined">close</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+
+        @if (isExpanded && (creatorReminderDateTime || (noteForm.get('labels')?.value?.length > 0))) {
           <div class="labels-container" style="padding: 0 16px; margin-bottom: 8px;">
+            @if (creatorReminderDateTime) {
+              <div class="label-chip reminder-chip" (click)="openCreatorReminderFromChip($event)" data-tooltip="Edit reminder">
+                <span class="material-symbols-outlined chip-icon">schedule</span>
+                <span class="label-name">{{ creatorReminderDateTime | reminderFormat: creatorReminderRepeat }}</span>
+                <button type="button" class="remove-label-btn" (click)="removeCreatorReminder($event)" data-tooltip="Delete reminder">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+
             @for (label of noteForm.get('labels')?.value; track label.id) {
               <div class="label-chip">
                 <span class="label-name">{{ label.name }}</span>
@@ -238,7 +444,7 @@
           <div class="creator-footer">
             <div class="toolbar-icons">
               <div class="palette-container" style="position: relative; display: inline-block;">
-                <button type="button" class="icon-btn" data-tooltip="Background options" (click)="toggleCreatorColorPalette($event)">
+                <button type="button" class="icon-btn" [attr.data-tooltip]="showCreatorColorPalette ? null : 'Background options'" (click)="toggleCreatorColorPalette($event)">
                   <span class="material-symbols-outlined">palette</span>
                 </button>
                 @if (showCreatorColorPalette) {
@@ -261,13 +467,31 @@
                   </div>
                 }
               </div>
+
+              <div class="creator-reminder-container" style="position: relative; display: inline-block;">
+                <button type="button" class="icon-btn" [attr.data-tooltip]="showCreatorReminderPopup ? null : 'Remind me'" (click)="toggleCreatorReminderPopup($event)">
+                  <span class="material-symbols-outlined">
+                    {{ creatorReminderDateTime ? 'notifications_active' : 'add_alert' }}
+                  </span>
+                </button>
+                @if (showCreatorReminderPopup) {
+                  <app-reminder-popup
+                    [currentReminderDateTime]="creatorReminderDateTime"
+                    [currentReminderRepeat]="creatorReminderRepeat"
+                    (reminderSet)="onCreatorReminderSet($event)"
+                    (reminderDeleted)="removeCreatorReminder()"
+                    (closePopup)="showCreatorReminderPopup = false"
+                    class="creator-reminder-popup-container">
+                  </app-reminder-popup>
+                }
+              </div>
               <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
                 <span class="material-symbols-outlined">image</span>
               </button>
               <button type="button" class="icon-btn" data-tooltip="Archive"><span class="material-symbols-outlined">archive</span></button>
               
               <div class="creator-more-container" style="position: relative; display: inline-block;">
-                <button type="button" class="icon-btn" data-tooltip="More" (click)="toggleCreatorMoreMenu($event)">
+                <button type="button" class="icon-btn" [attr.data-tooltip]="showCreatorMoreMenu ? null : 'More'" (click)="toggleCreatorMoreMenu($event)">
                   <span class="material-symbols-outlined">more_vert</span>
                 </button>
                 
@@ -276,6 +500,15 @@
                     <div class="menu-item" (click)="openCreatorLabelPopup($event)">
                       {{ (noteForm.get('labels')?.value && noteForm.get('labels')?.value.length > 0) ? 'Change labels' : 'Add label' }}
                     </div>
+                    @if (isCreatorChecklist) {
+                      <div class="menu-item" (click)="uncheckAllCreatorItems()">Uncheck all items</div>
+                      @if (completedCreatorTodoItems.length > 0) {
+                        <div class="menu-item" (click)="deleteCheckedCreatorItems()">Delete checked items</div>
+                      }
+                      <div class="menu-item" (click)="onCreatorHideCheckboxesClick()">Hide checkboxes</div>
+                    } @else {
+                      <div class="menu-item" (click)="convertCreatorChecklistOrText(false)">Show checkboxes</div>
+                    }
                   </div>
                 }
 
@@ -308,11 +541,16 @@
             <app-note-card 
               cdkDrag
               [note]="note" 
-              (click)="openNoteDialog(note)"
+              (click)="onNoteCardClick(note)"
               (delete)="onDeleteNote($event)"
               (togglePin)="onUpdateNote($event)"
               (toggleArchive)="onUpdateNote($event)"
-              (labelClick)="setView($event)">
+              (labelClick)="setView($event)"
+              (versionHistory)="openVersionHistory($event)"
+              (openCollaborators)="openCollaborators($event)"
+              (requestLock)="openPinModal($event.note, $event.mode)"
+              (openPublicShare)="openPublicShareModal($event)"
+              (openDrawing)="openDrawingForNote($event)">
             </app-note-card>
           }
         </div>
@@ -333,11 +571,16 @@
             <app-note-card 
               cdkDrag
               [note]="note" 
-              (click)="openNoteDialog(note)"
+              (click)="onNoteCardClick(note)"
               (delete)="onDeleteNote($event)"
               (togglePin)="onUpdateNote($event)"
               (toggleArchive)="onUpdateNote($event)"
-              (labelClick)="setView($event)">
+              (labelClick)="setView($event)"
+              (versionHistory)="openVersionHistory($event)"
+              (openCollaborators)="openCollaborators($event)"
+              (requestLock)="openPinModal($event.note, $event.mode)"
+              (openPublicShare)="openPublicShareModal($event)"
+              (openDrawing)="openDrawingForNote($event)">
             </app-note-card>
           }
         </div>
@@ -352,6 +595,38 @@
       </div>
     }
 
+    <!-- Reminders Section -->
+    @if (currentView === 'reminders' && noteService.searchReminderNotes().length > 0) {
+      <div class="notes-section">
+        <div class="masonry-grid">
+          @for (note of noteService.searchReminderNotes(); track note.id) {
+            <app-note-card 
+              [note]="note" 
+              [isTrashView]="false"
+              (click)="onNoteCardClick(note)"
+              (delete)="onDeleteNote($event)"
+              (togglePin)="onUpdateNote($event)"
+              (toggleArchive)="onUpdateNote($event)"
+              (labelClick)="setView($event)"
+              (versionHistory)="openVersionHistory($event)"
+              (openCollaborators)="openCollaborators($event)"
+              (requestLock)="openPinModal($event.note, $event.mode)"
+              (openPublicShare)="openPublicShareModal($event)"
+              (openDrawing)="openDrawingForNote($event)">
+            </app-note-card>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Reminders Empty State -->
+    @if (currentView === 'reminders' && noteService.searchReminderNotes().length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-outlined empty-icon">notifications</span>
+        <p class="empty-text">Notes with upcoming reminders appear here</p>
+      </div>
+    }
+
     <!-- Archive Section -->
     @if (currentView === 'archive' || (isLabelView && noteService.searchArchivedNotes().length > 0)) {
       <div class="notes-section">
@@ -361,13 +636,18 @@
         <div class="masonry-grid">
           @for (note of noteService.searchArchivedNotes(); track note.id) {
             <app-note-card 
-              [note]="note"
+              [note]="note" 
               [isTrashView]="false"
-              (click)="openNoteDialog(note)"
+              (click)="onNoteCardClick(note)"
               (delete)="onDeleteNote($event)"
               (togglePin)="onUpdateNote($event)"
               (toggleArchive)="onUpdateNote($event)"
-              (labelClick)="setView($event)">
+              (labelClick)="setView($event)"
+              (versionHistory)="openVersionHistory($event)"
+              (openCollaborators)="openCollaborators($event)"
+              (requestLock)="openPinModal($event.note, $event.mode)"
+              (openPublicShare)="openPublicShareModal($event)"
+              (openDrawing)="openDrawingForNote($event)">
             </app-note-card>
           }
         </div>
@@ -402,7 +682,7 @@
         <div class="masonry-grid">
           @for (note of noteService.trashedNotes(); track note.id) {
             <app-note-card 
-              [note]="note"
+              [note]="note" 
               [isTrashView]="true"
               (delete)="onDeleteNote($event)"
               (togglePin)="onUpdateNote($event)"
@@ -431,8 +711,28 @@
     <app-note-dialog 
       [note]="selectedNote" 
       (closeDialog)="closeNoteDialog()"
-      (saveNote)="onSaveDialog($event)">
+      (saveNote)="onSaveDialog($event)"
+      (requestLock)="openPinModal($event.note, $event.mode)"
+      (openPublicShare)="openPublicShareModal($event)"
+      (openDrawing)="openDrawingForNote($event)">
     </app-note-dialog>
+  }
+
+  <!-- Version History Modal (From Note Card) -->
+  @if (versionHistoryNote) {
+    <app-version-history-modal
+      [note]="versionHistoryNote"
+      (close)="closeVersionHistory()">
+    </app-version-history-modal>
+  }
+
+  <!-- Collaborators Modal (From Note Card) -->
+  @if (collaboratorsNote) {
+    <app-collaborators-modal
+      [note]="collaboratorsNote"
+      (collaboratorsUpdated)="onCollaboratorsUpdated($event)"
+      (closeModal)="closeCollaborators()">
+    </app-collaborators-modal>
   }
 
   <!-- Empty Trash Confirmation Modal -->
@@ -450,6 +750,90 @@
   
   @if (showEditLabelsModal) {
     <app-edit-labels-modal (close)="showEditLabelsModal = false"></app-edit-labels-modal>
+  }
+
+  <!-- Creator Hide Checkboxes Confirmation Modal -->
+  @if (showCreatorHideCheckboxesModal) {
+    <div class="modal-overlay" (click)="cancelCreatorHideCheckboxes()">
+      <div class="confirm-modal" (click)="$event.stopPropagation()">
+        <div class="confirm-modal-header">
+          <span class="confirm-modal-title">Delete checked items</span>
+          <button type="button" class="icon-btn close-x-btn" (click)="cancelCreatorHideCheckboxes()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="confirm-modal-actions">
+          <button type="button" class="btn btn-text" (click)="confirmCreatorHideCheckboxes(true)">Delete</button>
+          <button type="button" class="btn btn-text action-btn-keep" (click)="confirmCreatorHideCheckboxes(false)">Keep</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Shared Note Security Prompt Modal (Google Keep Style) -->
+  @if (sharedPromptNote) {
+    <div class="modal-overlay" (click)="closeSharedPromptModal()">
+      <div class="shared-prompt-modal" (click)="$event.stopPropagation()">
+        <div class="shared-prompt-header">
+          <span class="shared-prompt-title">This note has been shared with you</span>
+          <button type="button" class="icon-btn close-x-btn" (click)="closeSharedPromptModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="shared-prompt-body">
+          <p>
+            The owner of this note is <strong>{{ sharedPromptNote.ownerEmail }}</strong>. You should only open notes from someone you trust. How would you like to proceed?
+          </p>
+        </div>
+        <div class="shared-prompt-actions">
+          <button type="button" class="btn btn-text delete-btn" (click)="onDeclineSharedNote(sharedPromptNote)">Delete note</button>
+          <button type="button" class="btn btn-text open-btn" (click)="onAcceptSharedNote(sharedPromptNote)">Open note</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- PIN Vault Modal -->
+  @if (pinModalData) {
+    <app-pin-modal
+      [note]="pinModalData.note"
+      [mode]="pinModalData.mode"
+      (close)="closePinModal()"
+      (success)="onPinSuccess($event)">
+    </app-pin-modal>
+  }
+
+  <!-- Public Link Share Modal -->
+  @if (publicShareNote) {
+    <app-public-share-modal
+      [note]="publicShareNote"
+      (close)="publicShareNote = null"
+      (noteUpdated)="onPublicShareUpdated($event)">
+    </app-public-share-modal>
+  }
+
+  <!-- Interactive Drawing Canvas Studio (Google Keep Style) -->
+  @if (drawingTarget) {
+    <app-drawing-canvas
+      [noteId]="drawingTarget.note?.id"
+      (close)="closeDrawing()"
+      (drawingSaved)="onDrawingSaved($event)">
+    </app-drawing-canvas>
+  }
+
+
+  <!-- Change Password Modal -->
+  @if (showChangePasswordModal) {
+    <app-change-password-modal
+      (close)="closeChangePasswordModal()">
+    </app-change-password-modal>
+  }
+
+  <!-- Delete Account Modal -->
+  @if (showDeleteAccountModal) {
+    <app-delete-account-modal
+      (close)="closeDeleteAccountModal()">
+    </app-delete-account-modal>
   }
 
   <app-toast></app-toast>

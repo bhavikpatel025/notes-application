@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: space-between;
   min-width: 300px;
-  max-width: 400px;
+  max-width: 540px;
   box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2), 
               0 6px 10px 0 rgba(0,0,0,0.14), 
               0 1px 18px 0 rgba(0,0,0,0.12);
@@ -28,13 +28,15 @@
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0.2px;
+  line-height: 1.4;
 }
 
 .toast-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-left: 16px;
+  flex-shrink: 0;
 }
 
 .action-btn {
@@ -47,6 +49,7 @@
   padding: 6px 8px;
   border-radius: 4px;
   letter-spacing: 0.5px;
+  white-space: nowrap;
   
   &:hover {
     background-color: rgba(251, 188, 4, 0.1);

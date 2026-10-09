@@ -1,0 +1,93 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="delete-modal-card" (click)="$event.stopPropagation()">
+    
+    <div class="delete-modal-header">
+      <div class="danger-icon-badge">
+        <span class="material-symbols-outlined">delete_forever</span>
+      </div>
+      <h3 class="delete-modal-title">Delete Account</h3>
+      <p class="delete-modal-subtitle">
+        Are you sure you want to delete your account? This action is <strong>permanent</strong> and cannot be undone.
+      </p>
+    </div>
+
+    <div class="warning-callout">
+      <div class="warning-callout-header">
+        <span class="material-symbols-outlined warning-icon">warning</span>
+        <strong>What will be deleted:</strong>
+      </div>
+      <ul class="warning-list">
+        <li>All your personal and shared notes</li>
+        <li>Checklists, pinned items, and drawings</li>
+        <li>Custom labels, reminders, and notifications</li>
+        <li>Account profile & login credentials</li>
+      </ul>
+    </div>
+
+    @if (errorMessage) {
+      <div class="error-alert">
+        <span class="material-symbols-outlined error-icon">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    @if (isLoadingStatus) {
+      <div class="loading-state">
+        <span class="spinner"></span>
+        <span>Checking account security settings...</span>
+      </div>
+    } @else {
+      <form (ngSubmit)="onSubmit()" class="delete-form">
+        @if (hasPassword) {
+          <div class="form-group">
+            <label for="deletePasswordInput">Enter your password to confirm:</label>
+            <div class="input-with-icon">
+              <input 
+                id="deletePasswordInput"
+                [type]="showPassword ? 'text' : 'password'" 
+                [(ngModel)]="password" 
+                name="password"
+                placeholder="Enter your current password"
+                autocomplete="current-password"
+                [disabled]="isDeleting">
+              <button type="button" class="toggle-visibility-btn" (click)="showPassword = !showPassword" tabindex="-1">
+                <span class="material-symbols-outlined">
+                  {{ showPassword ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="form-group">
+            <label for="deleteConfirmInput">
+              Type <strong>DELETE</strong> to confirm:
+            </label>
+            <input 
+              id="deleteConfirmInput"
+              type="text" 
+              [(ngModel)]="confirmText" 
+              name="confirmText"
+              placeholder="Type DELETE"
+              autocomplete="off"
+              [disabled]="isDeleting">
+          </div>
+        }
+
+        <div class="delete-modal-actions">
+          <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="isDeleting">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-delete-danger" [disabled]="!canSubmit || isDeleting">
+            @if (isDeleting) {
+              <span class="spinner"></span>
+              <span>Deleting Account...</span>
+            } @else {
+              <span class="material-symbols-outlined">delete_forever</span>
+              <span>Permanently Delete</span>
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

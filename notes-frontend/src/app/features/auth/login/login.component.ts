@@ -15,6 +15,7 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   error: string = '';
   isLoading = false;
+  showPassword = false;
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);

@@ -1,4 +1,4 @@
-<div class="note-card" [style.background-color]="note.color !== '#FFFFFF' ? note.color : 'var(--gk-bg-primary)'">
+<div class="note-card" [class.has-open-menu]="showMoreMenu || showColorPalette || showReminderPopup || showLabelPopup" [style.background-color]="note.color !== '#FFFFFF' ? note.color : 'var(--gk-bg-primary)'">
   
   <!-- Image Grid -->
   @if (note.imageUrls && note.imageUrls.length > 0) {
@@ -23,96 +23,271 @@
     }
   </div>
 
-  <div class="note-content">
-    @if (note.content) {
-      <p class="content" [innerHTML]="note.content | highlight:searchQuery"></p>
-    }
-
-    @if (note.labels && note.labels.length > 0) {
-      <div class="labels-container">
-        @for (label of note.labels; track label.id) {
-          <div class="label-chip" (click)="onLabelClick(label.name, $event)">
-            <span class="label-name">{{ label.name }}</span>
-            <button class="remove-label-btn" (click)="removeLabel(label.id, $event)" data-tooltip="Remove label">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-          </div>
-        }
+  @if (note.isPendingAcceptance) {
+    <div class="shared-pending-banner">
+      <div class="shared-avatar-row">
+        <div class="shared-avatar-circle" [style.background-color]="getAvatarBgColor(note.ownerEmail)">
+          {{ getInitial(note.ownerName || note.ownerEmail) }}
+        </div>
       </div>
-    }
-  </div>
+      <div class="shared-meta-col">
+        <span class="shared-label">Shared from</span>
+        <span class="shared-owner-name">{{ note.ownerName || note.ownerEmail }}</span>
+        <span class="shared-time">{{ note.createdAt | date:'shortTime' }}</span>
+      </div>
+    </div>
+  } @else if (note.isLocked) {
+    <div class="locked-vault-banner">
+      <div class="lock-glyph-circle">
+        <span class="material-symbols-outlined lock-icon">lock</span>
+      </div>
+      <div class="lock-meta-col">
+        <span class="lock-title">Note is locked</span>
+        <span class="lock-subtitle">Click to unlock with PIN</span>
+      </div>
+    </div>
+  } @else {
+    <div class="note-content">
+      @if (isChecklist) {
+        <div class="checklist-preview">
+          <!-- Uncompleted items -->
+          @for (item of uncompletedTodoItems; track item.id || item.text) {
+            <div class="checklist-item" (click)="$event.stopPropagation()">
+              <button class="checkbox-btn" (click)="toggleTodoItem(item, $event)" [attr.data-tooltip]="item.isCompleted ? 'Mark uncompleted' : 'Mark completed'">
+                <span class="material-symbols-outlined checkbox-icon">
+                  {{ item.isCompleted ? 'check_box' : 'check_box_outline_blank' }}
+                </span>
+              </button>
+              <span class="item-text" [class.completed]="item.isCompleted" [innerHTML]="item.text | highlight:searchQuery"></span>
+            </div>
+          }
 
-  <div class="note-actions">
-    @if (!isTrashView) {
-        <div class="palette-container" style="position: relative; display: inline-block;">
-          <button type="button" class="icon-btn" data-tooltip="Background options" (click)="toggleColorPalette($event)">
-            <span class="material-symbols-outlined">palette</span>
-          </button>
-          
-          @if (showColorPalette) {
-            <div class="color-palette-menu" (click)="$event.stopPropagation()">
-              @for (color of colors; track color.name) {
-                <div 
-                  class="color-swatch"
-                  [class.default-color]="color.isDefault"
-                  [class.active]="note.color === color.value"
-                  [style.background-color]="color.isDefault ? 'transparent' : color.value"
-                  [attr.data-tooltip]="color.name"
-                  (click)="changeColor(color.value, $event)">
-                  
-                  @if (color.isDefault) {
-                    <span class="material-symbols-outlined">format_color_reset</span>
-                  } @else if (note.color === color.value) {
-                    <span class="material-symbols-outlined">check</span>
+          <!-- Completed items collapsible section -->
+          @if (completedTodoItemsCount > 0) {
+            <div class="completed-section" (click)="$event.stopPropagation()">
+              <div class="completed-header" (click)="toggleCompletedSection($event)">
+                <span class="material-symbols-outlined expand-icon">
+                  {{ showCompleted ? 'expand_more' : 'chevron_right' }}
+                </span>
+                <span>{{ completedTodoItemsCount }} Completed {{ completedTodoItemsCount === 1 ? 'item' : 'items' }}</span>
+              </div>
+
+              @if (showCompleted) {
+                <div class="completed-list">
+                  @for (item of completedTodoItems; track item.id || item.text) {
+                    <div class="checklist-item completed-item" (click)="$event.stopPropagation()">
+                      <button class="checkbox-btn" (click)="toggleTodoItem(item, $event)" data-tooltip="Mark uncompleted">
+                        <span class="material-symbols-outlined checkbox-icon checked">check_box</span>
+                      </button>
+                      <span class="item-text completed" [innerHTML]="item.text | highlight:searchQuery"></span>
+                    </div>
                   }
                 </div>
               }
             </div>
           }
         </div>
+      } @else if (note.content) {
+        <p class="content" [innerHTML]="note.content | highlight:searchQuery"></p>
+      }
 
-        <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
-          <span class="material-symbols-outlined">image</span>
-        </button>
-        <input type="file" #fileInput hidden accept="image/png, image/jpeg, image/gif" multiple (change)="onFileSelected($event)">
-        
-        <button type="button" class="icon-btn" [attr.data-tooltip]="note.isArchived ? 'Unarchive' : 'Archive'" (click)="onArchive($event)">
-          <span class="material-symbols-outlined">
-            {{ note.isArchived ? 'unarchive' : 'archive' }}
-          </span>
-        </button>
-        
-        <div class="more-container" style="position: relative; display: inline-block;">
-          <button type="button" class="icon-btn" data-tooltip="More" (click)="toggleMoreMenu($event)">
-            <span class="material-symbols-outlined">more_vert</span>
-          </button>
-          
-          @if (showMoreMenu) {
-            <div class="dropdown-menu more-menu" (click)="$event.stopPropagation()">
-              <div class="menu-item" (click)="onDelete($event)">Delete note</div>
-              <div class="menu-item" (click)="openLabelPopup($event)">
-                {{ (note.labels && note.labels.length > 0) ? 'Change labels' : 'Add label' }}
-              </div>
+      <!-- Chips (Reminder & Labels & Public Link) -->
+      @if (note.reminderDateTime || (note.labels && note.labels.length > 0) || note.isPublic) {
+        <div class="labels-container">
+          @if (note.isPublic) {
+            <div class="label-chip public-chip" (click)="onOpenPublicShare($event)" data-tooltip="Public link active">
+              <span class="material-symbols-outlined chip-icon">public</span>
+              <span class="label-name">Public</span>
+              @if (note.publicViewCount) {
+                <span class="public-views-badge">{{ note.publicViewCount }} {{ note.publicViewCount === 1 ? 'view' : 'views' }}</span>
+              }
             </div>
           }
 
-          @if (showLabelPopup) {
-            <app-label-selection-popup
-              [selectedLabels]="note.labels || []"
-              (labelsChanged)="onLabelsChanged($event)"
-              (closePopup)="showLabelPopup = false"
-              class="label-popup-container">
-            </app-label-selection-popup>
+          @if (note.reminderDateTime) {
+            <div class="label-chip reminder-chip" (click)="openReminderFromChip($event)" data-tooltip="Edit reminder">
+              <span class="material-symbols-outlined chip-icon">schedule</span>
+              <span class="label-name">{{ note.reminderDateTime | reminderFormat: note.reminderRepeat }}</span>
+              <button class="remove-label-btn" (click)="removeReminder($event)" data-tooltip="Delete reminder">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+          }
+
+          @if (note.labels && note.labels.length > 0) {
+            @for (label of note.labels; track label.id) {
+              <div class="label-chip" (click)="onLabelClick(label.name, $event)">
+                <span class="label-name" [innerHTML]="label.name | highlight:searchQuery"></span>
+                <button class="remove-label-btn" (click)="removeLabel(label.id, $event)" data-tooltip="Remove label">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
           }
         </div>
-    } @else {
-      <button class="icon-btn" (click)="onDelete($event)" data-tooltip="Delete forever">
-        <span class="material-symbols-outlined">delete_forever</span>
-      </button>
+      }
 
-      <button class="icon-btn" (click)="onRestore($event)" data-tooltip="Restore">
-        <span class="material-symbols-outlined">restore_from_trash</span>
-      </button>
-    }
-  </div>
+      <!-- Collaborator Avatar Row -->
+      @if (hasVisibleAvatars) {
+        <div class="card-collaborators" (click)="openCollaboratorsModal($event)">
+          @if (shouldShowOwnerAvatar) {
+            <div class="collab-avatar-chip owner-chip" [attr.data-tooltip]="note.ownerEmail" [style.background-color]="getAvatarBgColor(note.ownerEmail)">
+              {{ getInitial(note.ownerName || note.ownerEmail) }}
+            </div>
+          }
+          @for (c of otherCollaborators; track c.userId) {
+            <div class="collab-avatar-chip" [attr.data-tooltip]="c.email" [style.background-color]="getAvatarBgColor(c.email)">
+              {{ getInitial(c.fullName || c.email) }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="note-actions">
+      @if (!isTrashView) {
+          <div class="palette-container" style="position: relative; display: inline-flex;">
+            <button type="button" class="icon-btn" [attr.data-tooltip]="showColorPalette ? null : 'Background options'" (click)="toggleColorPalette($event)">
+              <span class="material-symbols-outlined">palette</span>
+            </button>
+            
+            @if (showColorPalette) {
+              <div class="color-palette-menu" [class.open-down]="openDirection === 'down'" [class.align-right]="openHorizontalDirection === 'right'" [class.align-left]="openHorizontalDirection === 'left'" (click)="$event.stopPropagation()">
+                @for (color of colors; track color.name) {
+                  <div 
+                    class="color-swatch"
+                    [class.default-color]="color.isDefault"
+                    [class.active]="note.color === color.value"
+                    [style.background-color]="color.isDefault ? 'transparent' : color.value"
+                    [attr.data-tooltip]="color.name"
+                    (click)="changeColor(color.value, $event)">
+                    
+                    @if (color.isDefault) {
+                      <span class="material-symbols-outlined">format_color_reset</span>
+                    } @else if (note.color === color.value) {
+                      <span class="material-symbols-outlined">check</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="reminder-container" style="position: relative; display: inline-flex;">
+            <button type="button" class="icon-btn" [attr.data-tooltip]="showReminderPopup ? null : 'Remind me'" (click)="toggleReminderPopup($event)">
+              <span class="material-symbols-outlined">
+                {{ note.reminderDateTime ? 'notifications_active' : 'add_alert' }}
+              </span>
+            </button>
+            
+            @if (showReminderPopup) {
+              <app-reminder-popup
+                [currentReminderDateTime]="note.reminderDateTime"
+                [currentReminderRepeat]="note.reminderRepeat"
+                (reminderSet)="onReminderSet($event)"
+                (reminderDeleted)="removeReminder()"
+                (closePopup)="showReminderPopup = false"
+                class="reminder-popup-container"
+                [class.open-down]="openDirection === 'down'"
+                [class.align-right]="openHorizontalDirection === 'right'"
+                [class.align-left]="openHorizontalDirection === 'left'">
+              </app-reminder-popup>
+            }
+          </div>
+
+          <button type="button" class="icon-btn" data-tooltip="Collaborator" (click)="openCollaboratorsModal($event)">
+            <span class="material-symbols-outlined">person_add</span>
+          </button>
+
+          <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
+            <span class="material-symbols-outlined">image</span>
+          </button>
+          <input type="file" #fileInput hidden accept="image/png, image/jpeg, image/gif" multiple (change)="onFileSelected($event)">
+          
+          <button type="button" class="icon-btn" [attr.data-tooltip]="note.isArchived ? 'Unarchive' : 'Archive'" (click)="onArchive($event)">
+            <span class="material-symbols-outlined">
+              {{ note.isArchived ? 'unarchive' : 'archive' }}
+            </span>
+          </button>
+          
+          <div class="more-container" style="position: relative; display: inline-flex;">
+            <button type="button" class="icon-btn" [attr.data-tooltip]="showMoreMenu ? null : 'More'" (click)="toggleMoreMenu($event)">
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+            
+            @if (showMoreMenu) {
+              <div class="dropdown-menu more-menu" [class.open-down]="openDirection === 'down'" [class.align-right]="openHorizontalDirection === 'right'" [class.align-left]="openHorizontalDirection === 'left'" (click)="$event.stopPropagation()">
+                <div class="menu-item" (click)="openLabelPopup($event)">
+                  {{ (note.labels && note.labels.length > 0) ? 'Change labels' : 'Add label' }}
+                </div>
+                <div class="menu-item" (click)="onOpenDrawing($event)">Add drawing</div>
+                <div class="menu-item" (click)="onMakeCopy($event)">Make a copy</div>
+                @if (isChecklist) {
+                  <div class="menu-item" (click)="uncheckAllItems($event)">Uncheck all items</div>
+                  @if (completedTodoItemsCount > 0) {
+                    <div class="menu-item" (click)="deleteCheckedItems($event)">Delete checked items</div>
+                  }
+                  <div class="menu-item" (click)="onHideCheckboxesClick($event)">Hide checkboxes</div>
+                } @else {
+                  <div class="menu-item" (click)="convertToChecklistOrText(false)">Show checkboxes</div>
+                }
+                <div class="menu-item" (click)="onCopyToGoogleDocs($event)">Copy to Google Docs</div>
+                <div class="menu-item" (click)="openVersionHistory($event)">Version history</div>
+                @if (!note.isLocked) {
+                  <div class="menu-item" (click)="onOpenPublicShare($event)">
+                    {{ note.isPublic ? 'Public link (Active)' : 'Share public link' }}
+                  </div>
+                  <div class="menu-item" (click)="onTriggerLock($event)">Lock note</div>
+                } @else {
+                  <div class="menu-item" (click)="onTriggerRemoveLock($event)">Remove lock</div>
+                }
+                @if (note.isOwner ?? true) {
+                  <div class="menu-item" (click)="onDelete($event)">Delete note</div>
+                } @else {
+                  <div class="menu-item" (click)="onRemoveMyself($event)">Remove myself</div>
+                }
+              </div>
+            }
+
+            @if (showLabelPopup) {
+              <app-label-selection-popup
+                [selectedLabels]="note.labels || []"
+                (labelsChanged)="onLabelsChanged($event)"
+                (closePopup)="showLabelPopup = false"
+                class="label-popup-container"
+                [class.open-down]="openDirection === 'down'"
+                [class.align-right]="openHorizontalDirection === 'right'"
+                [class.align-left]="openHorizontalDirection === 'left'">
+              </app-label-selection-popup>
+            }
+          </div>
+      } @else {
+        <button class="icon-btn" (click)="onDelete($event)" data-tooltip="Delete forever">
+          <span class="material-symbols-outlined">delete_forever</span>
+        </button>
+
+        <button class="icon-btn" (click)="onRestore($event)" data-tooltip="Restore">
+          <span class="material-symbols-outlined">restore_from_trash</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Delete Checked Items Confirmation Modal -->
+  @if (showHideCheckboxesModal) {
+    <div class="modal-overlay" (click)="cancelHideCheckboxes($event)">
+      <div class="confirm-modal" (click)="$event.stopPropagation()">
+        <div class="confirm-modal-header">
+          <span class="confirm-modal-title">Delete checked items</span>
+          <button type="button" class="icon-btn close-x-btn" (click)="cancelHideCheckboxes($event)">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="confirm-modal-actions">
+          <button type="button" class="btn btn-text" (click)="confirmHideCheckboxes(true, $event)">Delete</button>
+          <button type="button" class="btn btn-text action-btn-keep" (click)="confirmHideCheckboxes(false, $event)">Keep</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

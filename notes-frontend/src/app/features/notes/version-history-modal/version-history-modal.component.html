@@ -1,0 +1,71 @@
+<div class="version-modal-overlay" (click)="onOverlayClick($event)">
+  <div class="version-modal" (click)="onModalClick($event)">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-text">
+        <h2 class="modal-title">Version history</h2>
+        <p class="modal-subtitle">Download a previous version of your note in text format.</p>
+      </div>
+      <button type="button" class="icon-btn close-x-btn" (click)="onCloseClick($event)" data-tooltip="Close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Modal Content / List -->
+    <div class="modal-body">
+      @if (isLoading) {
+        <div class="loading-state">
+          <span class="material-symbols-outlined spin-icon">sync</span>
+          <span>Loading versions...</span>
+        </div>
+      } @else if (errorMessage) {
+        <div class="error-state">
+          <span>{{ errorMessage }}</span>
+        </div>
+      } @else if (histories.length === 0) {
+        <div class="empty-state">
+          <span>No version history available for this note.</span>
+        </div>
+      } @else {
+        <div class="version-list">
+          @for (version of histories; track version.id; let i = $index) {
+            <div class="version-item">
+              <div class="version-info-left">
+                <span class="material-symbols-outlined version-icon">description</span>
+                <div class="version-meta">
+                  <div class="version-date-row">
+                    <span class="version-date">{{ formatVersionDate(version.createdAt) }}</span>
+                  </div>
+                  <div class="version-author-row">
+                    @if (i === 0) {
+                      <span class="current-badge">Current Version</span>
+                    }
+                    <span class="author-text">
+                      @if (i === 0) { &bull; }
+                      {{ version.authorName }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="version-action-right">
+                <button type="button" class="btn download-btn" (click)="downloadVersion(version)">
+                  Download
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn dismiss-btn" (click)="onCloseClick($event)">
+        Dismiss
+      </button>
+    </div>
+
+  </div>
+</div>

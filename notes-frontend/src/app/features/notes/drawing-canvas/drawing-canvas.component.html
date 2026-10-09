@@ -1,0 +1,356 @@
+<div class="drawing-studio-container" (click)="closeDropdowns()">
+
+  <!-- Top Google Keep Drawing Toolbar -->
+  <header class="drawing-header" (click)="$event.stopPropagation()">
+    
+    <!-- Left Toolbar Items -->
+    <div class="header-left">
+      <!-- Back / Save Button -->
+      <button 
+        type="button" 
+        class="icon-btn back-btn" 
+        (click)="saveAndClose()" 
+        [disabled]="isSaving"
+        data-tooltip="Save and return">
+        @if (isSaving) {
+          <span class="material-symbols-outlined spin-icon">sync</span>
+        } @else {
+          <span class="material-symbols-outlined">arrow_back</span>
+        }
+      </button>
+
+      <!-- Divider -->
+      <div class="toolbar-divider"></div>
+
+      <!-- Select Tool (Marquee / Lasso) -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn tool-btn" 
+          [class.active]="activeTool === 'select'"
+          (click)="selectTool('select')"
+          data-tooltip="Select">
+          <svg class="select-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 3">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Eraser Tool -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn tool-btn" 
+          [class.active]="activeTool === 'eraser'"
+          (click)="selectTool('eraser')"
+          data-tooltip="Eraser">
+          <span class="material-symbols-outlined">ink_eraser</span>
+          <span class="dropdown-caret material-symbols-outlined">arrow_drop_down</span>
+        </button>
+
+        @if (activeDropdown === 'tool' && activeTool === 'eraser') {
+          <div class="tool-popover eraser-popover" (click)="$event.stopPropagation()">
+            <div class="popover-section-title">Eraser Options</div>
+            <div class="eraser-actions">
+              <button type="button" class="btn-clear-page" (click)="clearCanvas()">
+                <span class="material-symbols-outlined">delete</span>
+                <span>Clear page</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pen Tool -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn tool-btn" 
+          [class.active]="activeTool === 'pen'"
+          (click)="selectTool('pen')"
+          data-tooltip="Pen">
+          <span class="material-symbols-outlined">edit</span>
+          <span class="dropdown-caret material-symbols-outlined">arrow_drop_down</span>
+        </button>
+
+        @if (activeDropdown === 'tool' && activeTool === 'pen') {
+          <div class="tool-popover" (click)="$event.stopPropagation()">
+            <div class="color-palette-grid">
+              @for (color of paletteColors; track color) {
+                <button 
+                  type="button" 
+                  class="color-dot" 
+                  [style.background-color]="color"
+                  [class.selected]="toolConfigs.pen.color === color"
+                  (click)="setColor(color)">
+                </button>
+              }
+            </div>
+
+            <div class="popover-divider"></div>
+
+            <div class="size-picker-row">
+              @for (sizeItem of strokeSizes; track sizeItem.label) {
+                <button 
+                  type="button" 
+                  class="size-dot-btn" 
+                  [class.selected]="toolConfigs.pen.size === sizeItem.pen"
+                  [attr.data-tooltip]="sizeItem.label"
+                  (click)="setSize(sizeItem)">
+                  <span class="size-circle" [style.width.px]="sizeItem.pen * 2 + 4" [style.height.px]="sizeItem.pen * 2 + 4" [style.background-color]="toolConfigs.pen.color"></span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Marker / Felt-tip Tool -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn tool-btn" 
+          [class.active]="activeTool === 'marker'"
+          (click)="selectTool('marker')"
+          data-tooltip="Marker">
+          <span class="material-symbols-outlined">draw</span>
+          <span class="dropdown-caret material-symbols-outlined">arrow_drop_down</span>
+        </button>
+
+        @if (activeDropdown === 'tool' && activeTool === 'marker') {
+          <div class="tool-popover" (click)="$event.stopPropagation()">
+            <div class="color-palette-grid">
+              @for (color of paletteColors; track color) {
+                <button 
+                  type="button" 
+                  class="color-dot" 
+                  [style.background-color]="color"
+                  [class.selected]="toolConfigs.marker.color === color"
+                  (click)="setColor(color)">
+                </button>
+              }
+            </div>
+
+            <div class="popover-divider"></div>
+
+            <div class="size-picker-row">
+              @for (sizeItem of strokeSizes; track sizeItem.label) {
+                <button 
+                  type="button" 
+                  class="size-dot-btn" 
+                  [class.selected]="toolConfigs.marker.size === sizeItem.marker"
+                  [attr.data-tooltip]="sizeItem.label"
+                  (click)="setSize(sizeItem)">
+                  <span class="size-circle" [style.width.px]="sizeItem.marker + 4" [style.height.px]="sizeItem.marker + 4" [style.background-color]="toolConfigs.marker.color"></span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Highlighter Tool -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn tool-btn" 
+          [class.active]="activeTool === 'highlighter'"
+          (click)="selectTool('highlighter')"
+          data-tooltip="Highlighter">
+          <span class="material-symbols-outlined">format_paint</span>
+          <span class="dropdown-caret material-symbols-outlined">arrow_drop_down</span>
+        </button>
+
+        @if (activeDropdown === 'tool' && activeTool === 'highlighter') {
+          <div class="tool-popover" (click)="$event.stopPropagation()">
+            <div class="color-palette-grid">
+              @for (color of paletteColors; track color) {
+                <button 
+                  type="button" 
+                  class="color-dot" 
+                  [style.background-color]="color"
+                  [class.selected]="toolConfigs.highlighter.color === color"
+                  (click)="setColor(color)">
+                </button>
+              }
+            </div>
+
+            <div class="popover-divider"></div>
+
+            <div class="size-picker-row">
+              @for (sizeItem of strokeSizes; track sizeItem.label) {
+                <button 
+                  type="button" 
+                  class="size-dot-btn" 
+                  [class.selected]="toolConfigs.highlighter.size === sizeItem.highlighter"
+                  [attr.data-tooltip]="sizeItem.label"
+                  (click)="setSize(sizeItem)">
+                  <span class="size-circle" [style.width.px]="sizeItem.highlighter / 2 + 4" [style.height.px]="sizeItem.highlighter / 2 + 4" [style.background-color]="toolConfigs.highlighter.color"></span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Grid Background Selector -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn tool-btn" 
+          [class.active]="activeGrid !== 'none'"
+          (click)="toggleDropdown('grid')"
+          data-tooltip="Show grid">
+          <span class="material-symbols-outlined">grid_view</span>
+          <span class="dropdown-caret material-symbols-outlined">arrow_drop_down</span>
+        </button>
+
+        @if (activeDropdown === 'grid') {
+          <div class="tool-popover grid-popover" (click)="$event.stopPropagation()">
+            <div class="popover-section-title">Background Grid</div>
+            <div class="grid-options-grid">
+              <button 
+                type="button" 
+                class="grid-option-btn" 
+                [class.selected]="activeGrid === 'none'"
+                (click)="setGrid('none')">
+                <span class="material-symbols-outlined">crop_square</span>
+                <span>None</span>
+              </button>
+
+              <button 
+                type="button" 
+                class="grid-option-btn" 
+                [class.selected]="activeGrid === 'dots'"
+                (click)="setGrid('dots')">
+                <span class="material-symbols-outlined">more_horiz</span>
+                <span>Dots</span>
+              </button>
+
+              <button 
+                type="button" 
+                class="grid-option-btn" 
+                [class.selected]="activeGrid === 'rules'"
+                (click)="setGrid('rules')">
+                <span class="material-symbols-outlined">reorder</span>
+                <span>Rules</span>
+              </button>
+
+              <button 
+                type="button" 
+                class="grid-option-btn" 
+                [class.selected]="activeGrid === 'squares'"
+                (click)="setGrid('squares')">
+                <span class="material-symbols-outlined">grid_4x4</span>
+                <span>Grid</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- Right Toolbar Items -->
+    <div class="header-right">
+      <!-- Undo -->
+      <button 
+        type="button" 
+        class="icon-btn" 
+        (click)="undo()" 
+        [disabled]="!canUndo"
+        data-tooltip="Undo">
+        <span class="material-symbols-outlined">undo</span>
+      </button>
+
+      <!-- Redo -->
+      <button 
+        type="button" 
+        class="icon-btn" 
+        (click)="redo()" 
+        [disabled]="!canRedo"
+        data-tooltip="Redo">
+        <span class="material-symbols-outlined">redo</span>
+      </button>
+
+      <!-- Fullscreen Toggle -->
+      <button 
+        type="button" 
+        class="icon-btn" 
+        (click)="toggleFullscreen()" 
+        [attr.data-tooltip]="isFullscreen ? 'Exit full screen' : 'Full screen'">
+        <span class="material-symbols-outlined">
+          {{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}
+        </span>
+      </button>
+
+      <!-- More Menu -->
+      <div class="tool-wrapper">
+        <button 
+          type="button" 
+          class="icon-btn" 
+          (click)="toggleDropdown('more')"
+          data-tooltip="More options">
+          <span class="material-symbols-outlined">more_vert</span>
+        </button>
+
+        @if (activeDropdown === 'more') {
+          <div class="dropdown-menu more-dropdown-menu" (click)="$event.stopPropagation()">
+            <div class="menu-item" (click)="clearCanvas()">
+              <span class="material-symbols-outlined">delete_sweep</span>
+              <span>Clear page</span>
+            </div>
+            <div class="menu-item" (click)="downloadDrawing()">
+              <span class="material-symbols-outlined">download</span>
+              <span>Download drawing</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Done Button -->
+      <button 
+        type="button" 
+        class="btn-done" 
+        (click)="saveAndClose()" 
+        [disabled]="isSaving">
+        @if (isSaving) {
+          <span>Saving...</span>
+        } @else {
+          <span>Done</span>
+        }
+      </button>
+    </div>
+
+  </header>
+
+  <!-- Interactive Canvas Surface -->
+  <main 
+    class="canvas-surface-container"
+    [class.grid-dots]="activeGrid === 'dots'"
+    [class.grid-rules]="activeGrid === 'rules'"
+    [class.grid-squares]="activeGrid === 'squares'">
+
+    <canvas 
+      #drawingCanvas
+      class="drawing-canvas"
+      (mousedown)="onPointerDown($event)"
+      (mousemove)="onPointerMove($event)"
+      (mouseup)="onPointerUp($event)"
+      (mouseleave)="onPointerUp($event)"
+      (touchstart)="onPointerDown($event)"
+      (touchmove)="onPointerMove($event)"
+      (touchend)="onPointerUp($event)">
+    </canvas>
+
+    <!-- Bottom Toast / Hint (Google Keep style) -->
+    @if (showLongNotesHint) {
+      <div class="keep-drawing-hint">
+        <span>Taking long notes? We'll automatically add more space as you get to the bottom.</span>
+        <button type="button" class="btn-got-it" (click)="dismissHint()">Got it</button>
+      </div>
+    }
+
+  </main>
+
+</div>

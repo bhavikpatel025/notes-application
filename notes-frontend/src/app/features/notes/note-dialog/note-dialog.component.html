@@ -18,33 +18,159 @@
           </div>
         }
 
-        <input type="text" formControlName="title" placeholder="Title" class="title-input">
+        <div class="dialog-header-row">
+          <input type="text" formControlName="title" placeholder="Title" class="title-input">
+          <button type="button" class="icon-btn mobile-close-btn" (click)="onClose()" title="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
         
-        <textarea formControlName="content" placeholder="Note" class="content-input" cdkTextareaAutosize #autosize="cdkTextareaAutosize" [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="20"></textarea>
+        @if (!isChecklist) {
+          <textarea formControlName="content" placeholder="Note" class="content-input" cdkTextareaAutosize #autosize="cdkTextareaAutosize" [cdkAutosizeMinRows]="2" [cdkAutosizeMaxRows]="20"></textarea>
+        } @else {
+          <!-- Checklist Items Section -->
+          <div class="dialog-checklist-container">
+            <!-- Uncompleted Items -->
+            <div class="todo-items-list">
+              @for (item of uncompletedTodoItems; track item.id || item.text; let i = $index) {
+                <div class="dialog-todo-row">
+                  <button type="button" class="checkbox-btn" (click)="toggleTodoItem(item)">
+                    <span class="material-symbols-outlined checkbox-icon">
+                      {{ item.isCompleted ? 'check_box' : 'check_box_outline_blank' }}
+                    </span>
+                  </button>
+                  <input 
+                    type="text" 
+                    [(ngModel)]="item.text" 
+                    [ngModelOptions]="{standalone: true}"
+                    placeholder="List item" 
+                    class="todo-item-input"
+                    (input)="pushState(false)"
+                    (keydown)="onTodoItemKeydown($event, item, i)">
+                  <button type="button" class="remove-todo-btn" (click)="removeTodoItem(item)" data-tooltip="Delete item">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Add New Item Row -->
+            <div class="dialog-todo-row add-todo-row">
+              <span class="material-symbols-outlined add-icon">add</span>
+              <input 
+                type="text" 
+                [(ngModel)]="newTodoText" 
+                [ngModelOptions]="{standalone: true}"
+                placeholder="List item" 
+                class="todo-item-input new-item-input"
+                (keydown)="onNewTodoKeydown($event)"
+                (blur)="addTodoItem()">
+            </div>
+
+            <!-- Completed Items Collapsible Section -->
+            @if (completedTodoItems.length > 0) {
+              <div class="completed-section">
+                <div class="completed-header" (click)="showCompleted = !showCompleted">
+                  <span class="material-symbols-outlined expand-icon">
+                    {{ showCompleted ? 'expand_more' : 'chevron_right' }}
+                  </span>
+                  <span>{{ completedTodoItems.length }} Completed {{ completedTodoItems.length === 1 ? 'item' : 'items' }}</span>
+                </div>
+
+                @if (showCompleted) {
+                  <div class="todo-items-list completed-list">
+                    @for (item of completedTodoItems; track item.id || item.text) {
+                      <div class="dialog-todo-row completed-row">
+                        <button type="button" class="checkbox-btn" (click)="toggleTodoItem(item)">
+                          <span class="material-symbols-outlined checkbox-icon checked">check_box</span>
+                        </button>
+                        <input 
+                          type="text" 
+                          [(ngModel)]="item.text" 
+                          [ngModelOptions]="{standalone: true}"
+                          class="todo-item-input completed-input"
+                          (input)="pushState(false)">
+                        <button type="button" class="remove-todo-btn" (click)="removeTodoItem(item)" data-tooltip="Delete item">
+                          <span class="material-symbols-outlined">close</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
       </div>
 
-      @if (note.labels && note.labels.length > 0) {
+      <!-- Chips (Reminder & Labels & Public Link) -->
+      @if (reminderDateTime || (note.labels && note.labels.length > 0) || note.isPublic) {
         <div class="labels-container">
-          @for (label of note.labels; track label.id) {
-            <div class="label-chip">
-              <span class="label-name">{{ label.name }}</span>
-              <button class="remove-label-btn" (click)="removeLabel(label.id, $event)" data-tooltip="Remove label">
+          @if (note.isPublic) {
+            <div class="label-chip public-chip" (click)="onOpenPublicShare()" data-tooltip="Public link active">
+              <span class="material-symbols-outlined chip-icon">public</span>
+              <span class="label-name">Public</span>
+              @if (note.publicViewCount) {
+                <span class="public-views-badge">{{ note.publicViewCount }} {{ note.publicViewCount === 1 ? 'view' : 'views' }}</span>
+              }
+            </div>
+          }
+
+          @if (reminderDateTime) {
+            <div class="label-chip reminder-chip" (click)="openReminderFromChip($event)" data-tooltip="Edit reminder">
+              <span class="material-symbols-outlined chip-icon">schedule</span>
+              <span class="label-name">{{ reminderDateTime | reminderFormat: reminderRepeat }}</span>
+              <button type="button" class="remove-label-btn" (click)="removeReminder($event)" data-tooltip="Delete reminder">
                 <span class="material-symbols-outlined">close</span>
               </button>
             </div>
           }
+
+          @if (note.labels && note.labels.length > 0) {
+            @for (label of note.labels; track label.id) {
+              <div class="label-chip">
+                <span class="label-name">{{ label.name }}</span>
+                <button type="button" class="remove-label-btn" (click)="removeLabel(label.id, $event)" data-tooltip="Remove label">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- Collaborators Avatar Row -->
+      @if (hasVisibleAvatars) {
+        <div class="dialog-collaborators" (click)="openCollaboratorsModal($event)">
+          @if (shouldShowOwnerAvatar) {
+            <div class="collab-avatar-chip owner-chip" [attr.data-tooltip]="note.ownerEmail" [style.background-color]="getAvatarBgColor(note.ownerEmail)">
+              {{ getInitial(note.ownerName || note.ownerEmail) }}
+            </div>
+          }
+          @for (c of otherCollaborators; track c.userId) {
+            <div class="collab-avatar-chip" [attr.data-tooltip]="c.email" [style.background-color]="getAvatarBgColor(c.email)">
+              {{ getInitial(c.fullName || c.email) }}
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Edited Timestamp Indicator (Google Keep Style) -->
+      @if (currentUpdatedAt || note.createdAt) {
+        <div class="dialog-edited-info tooltip-right" [attr.data-tooltip]="getCreatedTooltip()">
+          <span>{{ currentUpdatedAt | editedFormat: note.createdAt }}</span>
         </div>
       }
 
       <div class="dialog-footer">
         <div class="toolbar-icons">
           <div class="palette-container" style="position: relative; display: inline-block;">
-            <button type="button" class="icon-btn" data-tooltip="Background options" (click)="toggleDialogColorPalette($event)">
+            <button type="button" class="icon-btn" [attr.data-tooltip]="showDialogColorPalette ? null : 'Background options'" (click)="toggleDialogColorPalette($event)">
               <span class="material-symbols-outlined">palette</span>
             </button>
             
             @if (showDialogColorPalette) {
-              <div class="color-palette-menu" (click)="$event.stopPropagation()">
+              <div class="color-palette-menu" [class.open-down]="openDirection === 'down'" [class.align-right]="openHorizontalDirection === 'right'" [class.align-left]="openHorizontalDirection === 'left'" (click)="$event.stopPropagation()">
                 @for (color of colors; track color.name) {
                   <div 
                     class="color-swatch"
@@ -64,6 +190,32 @@
               </div>
             }
           </div>
+
+          <div class="reminder-container" style="position: relative; display: inline-block;">
+            <button type="button" class="icon-btn" [attr.data-tooltip]="showReminderPopup ? null : 'Remind me'" (click)="toggleReminderPopup($event)">
+              <span class="material-symbols-outlined">
+                {{ reminderDateTime ? 'notifications_active' : 'add_alert' }}
+              </span>
+            </button>
+
+            @if (showReminderPopup) {
+              <app-reminder-popup
+                [currentReminderDateTime]="reminderDateTime"
+                [currentReminderRepeat]="reminderRepeat"
+                (reminderSet)="onReminderSet($event)"
+                (reminderDeleted)="removeReminder()"
+                (closePopup)="showReminderPopup = false"
+                class="reminder-popup-container"
+                [class.open-down]="openDirection === 'down'"
+                [class.align-right]="openHorizontalDirection === 'right'"
+                [class.align-left]="openHorizontalDirection === 'left'">
+              </app-reminder-popup>
+            }
+          </div>
+
+          <button type="button" class="icon-btn" data-tooltip="Collaborator" (click)="openCollaboratorsModal($event)">
+            <span class="material-symbols-outlined">person_add</span>
+          </button>
           
           <button type="button" class="icon-btn" data-tooltip="Add image" (click)="triggerFileInput(fileInput, $event)">
             <span class="material-symbols-outlined">image</span>
@@ -76,16 +228,41 @@
           </button>
           
           <div class="more-container" style="position: relative; display: inline-block;">
-            <button type="button" class="icon-btn" data-tooltip="More" (click)="toggleMoreMenu($event)">
+            <button type="button" class="icon-btn" [attr.data-tooltip]="showMoreMenu ? null : 'More'" (click)="toggleMoreMenu($event)">
               <span class="material-symbols-outlined">more_vert</span>
             </button>
             
             @if (showMoreMenu) {
-              <div class="dropdown-menu more-menu" (click)="$event.stopPropagation()">
-                <div class="menu-item" (click)="onDelete()">Delete note</div>
+              <div class="dropdown-menu more-menu" [class.open-down]="openDirection === 'down'" [class.align-right]="openHorizontalDirection === 'right'" [class.align-left]="openHorizontalDirection === 'left'" (click)="$event.stopPropagation()">
                 <div class="menu-item" (click)="openLabelPopup($event)">
                   {{ (note.labels && note.labels.length > 0) ? 'Change labels' : 'Add label' }}
                 </div>
+                <div class="menu-item" (click)="onOpenDrawing()">Add drawing</div>
+                <div class="menu-item" (click)="onMakeCopy($event)">Make a copy</div>
+                @if (isChecklist) {
+                  <div class="menu-item" (click)="uncheckAllItems()">Uncheck all items</div>
+                  @if (completedTodoItems.length > 0) {
+                    <div class="menu-item" (click)="deleteCheckedItems()">Delete checked items</div>
+                  }
+                  <div class="menu-item" (click)="onHideCheckboxesClick()">Hide checkboxes</div>
+                } @else {
+                  <div class="menu-item" (click)="convertToChecklistOrText(false)">Show checkboxes</div>
+                }
+                <div class="menu-item" (click)="onCopyToGoogleDocs($event)">Copy to Google Docs</div>
+                <div class="menu-item" (click)="openVersionHistory($event)">Version history</div>
+                @if (!note.isLocked) {
+                  <div class="menu-item" (click)="onOpenPublicShare()">
+                    {{ note.isPublic ? 'Public link (Active)' : 'Share public link' }}
+                  </div>
+                  <div class="menu-item" (click)="onTriggerLock()">Lock note</div>
+                } @else {
+                  <div class="menu-item" (click)="onTriggerRemoveLock()">Remove lock</div>
+                }
+                @if (note.isOwner ?? true) {
+                  <div class="menu-item" (click)="onDelete()">Delete note</div>
+                } @else {
+                  <div class="menu-item" (click)="onRemoveMyself()">Remove myself</div>
+                }
               </div>
             }
 
@@ -94,13 +271,71 @@
                 [selectedLabels]="note.labels || []"
                 (labelsChanged)="onLabelsChanged($event)"
                 (closePopup)="showLabelPopup = false"
-                class="label-popup-container">
+                class="label-popup-container"
+                [class.open-down]="openDirection === 'down'"
+                [class.align-right]="openHorizontalDirection === 'right'"
+                [class.align-left]="openHorizontalDirection === 'left'">
               </app-label-selection-popup>
             }
           </div>
+
+          <!-- Undo Button -->
+          <button 
+            type="button" 
+            class="icon-btn undo-btn" 
+            [attr.data-tooltip]="canUndo ? 'Undo' : null" 
+            [disabled]="!canUndo" 
+            (click)="undo()">
+            <span class="material-symbols-outlined">undo</span>
+          </button>
+
+          <!-- Redo Button -->
+          <button 
+            type="button" 
+            class="icon-btn redo-btn" 
+            [attr.data-tooltip]="canRedo ? 'Redo' : null" 
+            [disabled]="!canRedo" 
+            (click)="redo()">
+            <span class="material-symbols-outlined">redo</span>
+          </button>
         </div>
         
         <button type="button" class="btn btn-text close-btn" (click)="onClose()">Close</button>
       </div>
     </form>
+
+  <!-- Delete Checked Items Confirmation Modal -->
+  @if (showHideCheckboxesModal) {
+    <div class="confirm-modal-overlay" (click)="cancelHideCheckboxes()">
+      <div class="confirm-modal" (click)="$event.stopPropagation()">
+        <div class="confirm-modal-header">
+          <span class="confirm-modal-title">Delete checked items</span>
+          <button type="button" class="icon-btn close-x-btn" (click)="cancelHideCheckboxes()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="confirm-modal-actions">
+          <button type="button" class="btn btn-text" (click)="confirmHideCheckboxes(true)">Delete</button>
+          <button type="button" class="btn btn-text action-btn-keep" (click)="confirmHideCheckboxes(false)">Keep</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Version History Modal -->
+  @if (showVersionHistoryModal) {
+    <app-version-history-modal
+      [note]="note"
+      (close)="showVersionHistoryModal = false">
+    </app-version-history-modal>
+  }
+
+  <!-- Collaborators Modal -->
+  @if (showCollaboratorsModal) {
+    <app-collaborators-modal
+      [note]="note"
+      (collaboratorsUpdated)="onCollaboratorsUpdated($event)"
+      (closeModal)="showCollaboratorsModal = false">
+    </app-collaborators-modal>
+  }
 </div>

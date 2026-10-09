@@ -41,6 +41,26 @@ export class AuthService {
     );
   }
 
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(data: { email: string; token: string; newPassword: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, data);
+  }
+
+  changePassword(data: { currentPassword: string; newPassword: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/change-password`, data);
+  }
+
+  hasPassword(): Observable<{ hasPassword: boolean }> {
+    return this.http.get<{ hasPassword: boolean }>(`${this.apiUrl}/has-password`);
+  }
+
+  deleteAccount(data: { password?: string; confirmationText?: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/delete-account`, data);
+  }
+
   logout(): void {
     localStorage.removeItem('notes_auth');
     this.currentUser.set(null);

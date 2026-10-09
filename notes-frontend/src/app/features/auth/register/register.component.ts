@@ -15,6 +15,7 @@ export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   error: string = '';
   isLoading = false;
+  showPassword = false;
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);

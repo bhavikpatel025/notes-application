@@ -1,0 +1,146 @@
+<div class="public-view-container">
+  
+  <!-- Navigation / Top Bar -->
+  <header class="public-header">
+    <div class="header-brand">
+      <div class="logo-circle">
+        <span class="material-symbols-outlined logo-icon">lightbulb</span>
+      </div>
+      <div class="brand-text">
+        <span class="app-name">Keep Notes</span>
+        <span class="publish-tag">Public Document</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      @if (note) {
+        <button type="button" class="action-btn" (click)="copyContent()" [attr.data-tooltip]="copied ? 'Copied!' : 'Copy text'">
+          <span class="material-symbols-outlined">{{ copied ? 'check' : 'content_copy' }}</span>
+          <span class="btn-label">{{ copied ? 'Copied' : 'Copy text' }}</span>
+        </button>
+
+        <button type="button" class="action-btn print-btn" (click)="printNote()" data-tooltip="Print note">
+          <span class="material-symbols-outlined">print</span>
+        </button>
+      }
+
+      <button type="button" class="action-btn theme-toggle-btn" (click)="toggleTheme()" [attr.data-tooltip]="isDarkMode() ? 'Light mode' : 'Dark mode'">
+        <span class="material-symbols-outlined">
+          {{ isDarkMode() ? 'light_mode' : 'dark_mode' }}
+        </span>
+      </button>
+
+      <a routerLink="/" class="action-btn login-link-btn" data-tooltip="Go to App">
+        <span class="material-symbols-outlined">open_in_browser</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Content Body -->
+  <main class="public-main">
+    
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading public note...</p>
+      </div>
+    }
+
+    <!-- Error / Link Expired State -->
+    @else if (hasError || !note) {
+      <div class="error-card">
+        <div class="error-icon-circle">
+          <span class="material-symbols-outlined">lock</span>
+        </div>
+        <h2 class="error-title">Note Not Available</h2>
+        <p class="error-desc">
+          This note is private, deleted, or the public link has been disabled by the author.
+        </p>
+        <a routerLink="/" class="btn-return">
+          <span class="material-symbols-outlined">arrow_back</span>
+          <span>Open Keep Notes</span>
+        </a>
+      </div>
+    }
+
+    <!-- Active Note Presentation -->
+    @else {
+      <article class="note-article" [style.background-color]="note.color !== '#FFFFFF' ? note.color : 'var(--gk-bg-primary)'">
+        
+        <!-- Attached Images Preview -->
+        @if (note.imageUrls && note.imageUrls.length > 0) {
+          <div class="article-images" [class.single]="note.imageUrls.length === 1">
+            @for (img of note.imageUrls; track img) {
+              <div class="image-wrapper">
+                <img [src]="img" alt="Attached note image" loading="lazy">
+              </div>
+            }
+          </div>
+        }
+
+        <div class="article-inner">
+          <!-- Title -->
+          @if (note.title) {
+            <h1 class="article-title">{{ note.title }}</h1>
+          }
+
+          <!-- Author & Meta Info Row -->
+          <div class="article-meta-row">
+            <div class="author-chip">
+              <div class="author-avatar">{{ getInitial(note.ownerName) }}</div>
+              <span class="author-name">{{ note.ownerName }}</span>
+            </div>
+            
+            <div class="meta-divider">•</div>
+            
+            <time class="meta-date" [attr.datetime]="note.createdAt">
+              {{ note.createdAt | date:'mediumDate' }}
+            </time>
+
+            @if (note.publicViewCount) {
+              <div class="meta-divider">•</div>
+              <div class="meta-views">
+                <span class="material-symbols-outlined view-icon">visibility</span>
+                <span>{{ note.publicViewCount }} {{ note.publicViewCount === 1 ? 'view' : 'views' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Content Body -->
+          <div class="article-body">
+            <!-- Checklist Mode -->
+            @if (note.type === 1 && note.todoItems && note.todoItems.length > 0) {
+              <div class="checklist-container">
+                @for (item of note.todoItems; track item.id || item.text) {
+                  <div class="checklist-row" [class.completed]="item.isCompleted">
+                    <span class="material-symbols-outlined checkbox-icon">
+                      {{ item.isCompleted ? 'check_box' : 'check_box_outline_blank' }}
+                    </span>
+                    <span class="checklist-text">{{ item.text }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Regular Text Mode -->
+            @else if (note.content) {
+              <div class="text-content">
+                {{ note.content }}
+              </div>
+            }
+          </div>
+        </div>
+
+      </article>
+
+      <!-- Footer Branding -->
+      <footer class="public-footer">
+        <p>Published with <strong>Keep Notes</strong></p>
+      </footer>
+    }
+
+  </main>
+
+  <app-toast></app-toast>
+</div>

@@ -1,0 +1,299 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2150;
+  padding: 16px;
+}
+
+.delete-modal-card {
+  background-color: var(--gk-bg-primary, #ffffff);
+  border: 1px solid var(--gk-border, #e0e0e0);
+  border-radius: 16px;
+  padding: 28px 24px 22px 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+.delete-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 18px;
+
+  .danger-icon-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(217, 48, 37, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+
+    .material-symbols-outlined {
+      font-size: 30px;
+      color: #ea4335;
+    }
+  }
+
+  .delete-modal-title {
+    margin: 0 0 6px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #ea4335;
+  }
+
+  .delete-modal-subtitle {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--gk-text-secondary, #5f6368);
+    max-width: 360px;
+
+    strong {
+      color: #ea4335;
+    }
+  }
+}
+
+.warning-callout {
+  background: rgba(217, 48, 37, 0.06);
+  border: 1px solid rgba(217, 48, 37, 0.22);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+
+  .warning-callout-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #d93025;
+    margin-bottom: 8px;
+
+    .warning-icon {
+      font-size: 18px;
+    }
+  }
+
+  .warning-list {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    li {
+      font-size: 12.5px;
+      color: var(--gk-text-secondary, #5f6368);
+      line-height: 1.4;
+    }
+  }
+}
+
+.error-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background-color: rgba(217, 48, 37, 0.1);
+  border: 1px solid rgba(217, 48, 37, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  color: #d93025;
+  font-size: 13px;
+  line-height: 1.4;
+
+  .error-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 0;
+  color: var(--gk-text-secondary, #5f6368);
+  font-size: 13.5px;
+}
+
+.delete-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--gk-text-primary, #202124);
+
+      strong {
+        color: #ea4335;
+        font-family: monospace;
+      }
+    }
+
+    input {
+      width: 100%;
+      background-color: var(--gk-bg-secondary, rgba(0, 0, 0, 0.04));
+      border: 1px solid var(--gk-border, #dadce0);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--gk-text-primary, #202124);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &:focus {
+        border-color: #ea4335;
+        box-shadow: 0 0 0 2px rgba(234, 67, 53, 0.2);
+        background-color: var(--gk-bg-primary, #ffffff);
+      }
+
+      &::placeholder {
+        color: var(--gk-text-secondary, #9aa0a6);
+        font-size: 13px;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .input-with-icon {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      input {
+        padding-right: 42px;
+      }
+
+      .toggle-visibility-btn {
+        position: absolute;
+        right: 8px;
+        background: transparent;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: var(--gk-text-secondary, #5f6368);
+
+        .material-symbols-outlined {
+          font-size: 18px;
+        }
+
+        &:hover {
+          color: var(--gk-text-primary, #202124);
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+  }
+
+  .delete-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+
+    .btn {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.15s ease, opacity 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+
+      &.btn-cancel {
+        background: transparent;
+        color: var(--gk-text-primary, #202124);
+
+        &:hover:not(:disabled) {
+          background-color: var(--gk-hover, rgba(0, 0, 0, 0.05));
+        }
+      }
+
+      &.btn-delete-danger {
+        background-color: #d93025;
+        color: #ffffff;
+
+        .material-symbols-outlined {
+          font-size: 18px;
+        }
+
+        &:hover:not(:disabled) {
+          background-color: #b3261e;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-state .spinner {
+  border: 2px solid rgba(100, 100, 100, 0.25);
+  border-top-color: var(--gk-text-primary, #202124);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
