@@ -16,7 +16,7 @@ export class NotificationService {
   private toastService = inject(ToastService);
   private authService = inject(AuthService);
 
-  private apiUrl = `${environment.apiUrl}/Notifications`;
+  private apiUrl = `${environment.apiUrl}/notifications`;
 
   public notifications = signal<NotificationDto[]>([]);
   public unreadCount = signal<number>(0);

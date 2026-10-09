@@ -23,7 +23,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHostedService<OrphanedFileCleanupJob>();
 builder.Services.AddHostedService<ReminderBackgroundService>();
 
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+var defaultOrigins = new[] 
+{ 
+    "http://localhost:4200", 
+    "https://notes-application-frontend-lemon.vercel.app" 
+};
+var configuredOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowedOrigins = defaultOrigins.Union(configuredOrigins).Where(o => !string.IsNullOrWhiteSpace(o)).Distinct().ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
